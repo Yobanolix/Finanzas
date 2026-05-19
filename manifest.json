@@ -1,0 +1,16 @@
+{
+  "name": "Wealth OS",
+  "short_name": "Wealth OS",
+  "description": "Sistema operativo patrimonial personal — cockpit financiero para decisiones de largo plazo",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#08090a",
+  "theme_color": "#08090a",
+  "orientation": "any",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
