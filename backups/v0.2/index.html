@@ -1,0 +1,2104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#08090a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wealth OS">
+<title>Wealth OS</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #08090a;
+    --bg1: #0e0f11;
+    --bg2: #141518;
+    --bg3: #1c1d20;
+    --bg4: #26272b;
+    --text: #ededed;
+    --text2: #9ea0a4;
+    --text3: #5e6066;
+    --accent: #5e90ff;
+    --green: #34c77b;
+    --red: #ef4d4d;
+    --orange: #f97316;
+    --yellow: #facc15;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.10);
+    --border3: rgba(255,255,255,0.16);
+    --r4: 4px; --r6: 6px; --r8: 8px; --r10: 10px; --r12: 12px;
+    --sidebar-w: 220px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html, body {
+    background: var(--bg); color: var(--text);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-feature-settings: "ss01" on, "cv11" on;
+    font-size: 13px; line-height: 1.5;
+    letter-spacing: -0.005em;
+  }
+  @supports (font-variation-settings: normal) { html, body { font-family: "Inter var", sans-serif; } }
+  body { overflow-x: hidden; }
+
+  button, input, select { font-family: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--accent); text-decoration: none; }
+  kbd {
+    background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 4px;
+    padding: 1px 5px; font-size: 10.5px; color: var(--text2); font-family: inherit;
+  }
+
+  /* ============ LAYOUT ============ */
+  #app { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  #sidebar { width: var(--sidebar-w); background: var(--bg1); border-right: 0.5px solid var(--border); position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sb-brand { padding: 20px 18px 14px; display: flex; align-items: center; gap: 9px; }
+  .sb-logo { width: 22px; height: 22px; border-radius: 5px; background: var(--text); color: var(--bg); display:flex; align-items:center; justify-content:center; font-weight: 700; font-size: 12px; }
+  .sb-brand-text { font-size: 13.5px; font-weight: 600; letter-spacing: -0.02em; }
+  .sb-nav { padding: 8px 8px; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+  .sb-item {
+    display: flex; align-items: center; gap: 9px; padding: 7px 10px; border-radius: var(--r6);
+    color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer;
+    background: none; border: none; width: 100%; text-align: left; transition: background 120ms, color 120ms;
+  }
+  .sb-item:hover { background: var(--bg2); color: var(--text); }
+  .sb-item.active { background: var(--bg3); color: var(--text); }
+  .sb-item svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .sb-item.active svg { color: var(--accent); }
+  .sb-shortcut { margin-left: auto; font-size: 10.5px; color: var(--text3); }
+  .sb-footer { padding: 12px 14px; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text3); }
+  .sb-footer-row { display: flex; justify-content: space-between; padding: 2px 0; font-variant-numeric: tabular-nums; }
+
+  /* MAIN */
+  #main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  #header { height: 52px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+  .h-title { font-size: 14.5px; font-weight: 600; letter-spacing: -0.02em; }
+  .h-actions { display: flex; align-items: center; gap: 8px; }
+  .cmd-trigger {
+    display: flex; align-items: center; gap: 8px; background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--r6); padding: 5px 10px 5px 8px; color: var(--text3); font-size: 12px; cursor: pointer;
+  }
+  .cmd-trigger:hover { color: var(--text2); border-color: var(--border3); }
+  .cmd-trigger svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  #content { padding: 22px 28px 80px; max-width: 1400px; width: 100%; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* TEXT */
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.025em; }
+  .display { font-size: 32px; font-weight: 600; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+  .num { font-variant-numeric: tabular-nums; }
+  .mono { font-feature-settings: "tnum" on; }
+  .label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
+  .sub { font-size: 12px; color: var(--text2); }
+  .muted { color: var(--text2); }
+  .muted-2 { color: var(--text3); }
+
+  /* CARDS */
+  .card { background: var(--bg1); border: 0.5px solid var(--border); border-radius: var(--r10); padding: 16px 18px; }
+  .card-tight { padding: 14px 16px; }
+
+  /* HERO */
+  .hero { background: var(--bg1); border: 0.5px solid var(--border); border-radius: var(--r12); padding: 22px 24px; margin-bottom: 16px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 22px; align-items: center; }
+  .hero-main { border-right: 0.5px solid var(--border); padding-right: 22px; }
+  .hero-main .label { margin-bottom: 4px; }
+  .hero-main .display { font-size: 38px; }
+  .hero-main .ssub { font-size: 12.5px; color: var(--text2); margin-top: 6px; display: flex; gap: 8px; align-items: center; }
+  .hero-side .label { margin-bottom: 4px; }
+  .hero-side .val { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hero-side .vsub { font-size: 11px; color: var(--text3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .delta { font-size: 11.5px; font-weight: 600; }
+  .delta.pos { color: var(--green); }
+  .delta.neg { color: var(--red); }
+  .delta.flat { color: var(--text2); }
+
+  /* GRIDS */
+  .grid { display: grid; gap: 14px; }
+  .g-3 { grid-template-columns: repeat(3, 1fr); }
+  .g-4 { grid-template-columns: repeat(4, 1fr); }
+  .g-2-1 { grid-template-columns: 2fr 1fr; }
+  .g-1-1 { grid-template-columns: 1fr 1fr; }
+
+  /* CONTROLS */
+  .btn { padding: 7px 13px; border-radius: var(--r6); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 12.5px; font-weight: 500; transition: all 120ms; }
+  .btn:hover { background: var(--bg3); border-color: var(--border3); }
+  .btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 600; }
+  .btn.primary:hover { background: #f8f8f8; }
+  .btn.ghost { background: none; border-color: transparent; color: var(--text2); }
+  .btn.ghost:hover { color: var(--text); background: var(--bg2); }
+  .btn.danger { color: var(--red); background: none; border-color: transparent; }
+  .btn.danger:hover { background: rgba(239,77,77,0.08); }
+  .btn.sm { padding: 5px 10px; font-size: 11.5px; }
+  .btn-icon { display: inline-flex; align-items: center; gap: 6px; }
+  .btn-icon svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  input[type=text], input[type=number], input[type=date], select, textarea {
+    background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--r6); color: var(--text);
+    font-size: 12.5px; padding: 7px 10px; width: 100%; outline: none; transition: border 120ms;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  ::placeholder { color: var(--text3); }
+  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ea0a4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 4px; letter-spacing: 0.02em; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* TABLES */
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { text-align: left; padding: 8px 12px; font-size: 10.5px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 0.5px solid var(--border); }
+  .tbl td { padding: 9px 12px; font-size: 12.5px; border-bottom: 0.5px solid var(--border); font-variant-numeric: tabular-nums; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr.row { cursor: pointer; }
+  .tbl tr.row:hover { background: rgba(255,255,255,0.015); }
+  .tbl tr.row.kfocus { background: rgba(94,144,255,0.06); }
+  .tbl .r { text-align: right; }
+  .tbl .pos { color: var(--green); }
+  .tbl .neg { color: var(--red); }
+
+  /* PILLS */
+  .pill { display: inline-block; font-size: 10.5px; padding: 1px 7px; border-radius: 20px; font-weight: 500; letter-spacing: 0.01em; border: 0.5px solid transparent; }
+  .pill.gray { background: var(--bg3); color: var(--text2); }
+  .pill.green { background: rgba(52,199,123,0.10); color: var(--green); }
+  .pill.red { background: rgba(239,77,77,0.10); color: var(--red); }
+  .pill.orange { background: rgba(249,115,22,0.10); color: var(--orange); }
+  .pill.blue { background: rgba(94,144,255,0.10); color: var(--accent); }
+  .pill.yellow { background: rgba(250,204,21,0.10); color: var(--yellow); }
+
+  /* DRAWER */
+  .drawer-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; display: none; opacity: 0; transition: opacity 120ms; }
+  .drawer-bg.open { display: block; opacity: 1; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 560px; max-width: 92vw; background: var(--bg1); border-left: 0.5px solid var(--border2); transform: translateX(100%); transition: transform 160ms ease-out; z-index: 101; display: flex; flex-direction: column; overflow: hidden; }
+  .drawer.open { transform: none; }
+  .drawer-head { padding: 18px 22px 14px; border-bottom: 0.5px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+  .drawer-head h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
+  .drawer-head .sub { margin-top: 3px; }
+  .drawer-body { padding: 18px 22px; overflow-y: auto; flex: 1; }
+  .drawer-foot { padding: 14px 22px; border-top: 0.5px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; background: var(--bg1); }
+
+  /* CMD-K PALETTE */
+  .cmdk-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding-top: 14vh; }
+  .cmdk-bg.open { display: flex; }
+  .cmdk { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: 12px; width: 100%; max-width: 580px; overflow: hidden; }
+  .cmdk-input-wrap { padding: 12px 14px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .cmdk-input-wrap svg { width: 14px; height: 14px; stroke: var(--text3); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .cmdk-input { background: none; border: none; outline: none; color: var(--text); font-size: 15px; flex: 1; padding: 2px 0; }
+  .cmdk-input::placeholder { color: var(--text3); }
+  .cmdk-list { max-height: 360px; overflow-y: auto; padding: 6px; }
+  .cmdk-section { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 10px 4px; font-weight: 600; }
+  .cmdk-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; }
+  .cmdk-item.active { background: var(--bg3); }
+  .cmdk-item .ic { width: 22px; height: 22px; border-radius: 5px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text2); flex-shrink: 0; }
+  .cmdk-item .desc { color: var(--text3); margin-left: auto; font-size: 11px; }
+  .cmdk-empty { padding: 24px; text-align: center; font-size: 13px; color: var(--text3); }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 10px); background: var(--bg2); border: 0.5px solid var(--border2); padding: 10px 16px; border-radius: 22px; font-size: 12.5px; z-index: 300; opacity: 0; transition: all 150ms; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.green { color: var(--green); }
+  #toast.red { color: var(--red); }
+
+  /* CHARTS */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* SCENARIO LIST */
+  .scn-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer; transition: background 120ms; }
+  .scn-row:hover { background: rgba(255,255,255,0.015); }
+  .scn-row:last-child { border-bottom: none; }
+  .scn-row .scn-icon { width: 28px; height: 28px; border-radius: 7px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .scn-row .scn-name { font-size: 13.5px; font-weight: 500; }
+  .scn-row .scn-verdict { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .scn-row .scn-pin { margin-left: auto; color: var(--text3); font-size: 12px; }
+
+  /* GOAL CARDS */
+  .goal-card { background: var(--bg1); border: 0.5px solid var(--border); border-radius: var(--r10); padding: 16px 18px; transition: border 120ms; cursor: pointer; }
+  .goal-card:hover { border-color: var(--border2); }
+  .goal-card .gtitle { font-size: 13.5px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 4px; }
+  .goal-card .gsub { font-size: 11.5px; color: var(--text2); margin-bottom: 14px; }
+  .goal-card .gnum { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .goal-card .gnum .now { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
+  .goal-card .gnum .tgt { font-size: 11px; color: var(--text3); font-variant-numeric: tabular-nums; }
+  .goal-bar { height: 4px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .goal-bar .fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 200ms; }
+  .goal-bar .fill.green { background: var(--green); }
+  .goal-bar .fill.orange { background: var(--orange); }
+  .goal-bar .fill.red { background: var(--red); }
+  .goal-card .gstatus { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; }
+
+  /* IMPACT TABLE in scenario detail */
+  .impact-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 7px 0; font-size: 12.5px; align-items: center; }
+  .impact-row .lbl-row { color: var(--text2); }
+  .impact-row .val { font-variant-numeric: tabular-nums; font-weight: 500; }
+  .impact-row .delta-pill { font-size: 11px; padding: 1px 6px; border-radius: 20px; font-weight: 600; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 40px 12px; color: var(--text3); font-size: 12.5px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 8px; border: 2px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--bg4); }
+
+  /* DRAG OVERLAY */
+  #drag-overlay { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: none; align-items: center; justify-content: center; background: rgba(8,9,10,0.85); }
+  #drag-overlay.show { display: flex; }
+  #drag-overlay .msg { background: var(--bg1); border: 1px dashed var(--accent); border-radius: 12px; padding: 28px 40px; font-size: 14px; color: var(--text); }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) { .g-4 { grid-template-columns: 1fr 1fr; } .g-3 { grid-template-columns: 1fr 1fr; } .hero { grid-template-columns: 1fr 1fr; gap: 18px; } .hero-main { grid-column: 1/-1; border-right: none; padding-right: 0; padding-bottom: 18px; border-bottom: 0.5px solid var(--border); } }
+  @media (max-width: 800px) {
+    #sidebar { display: none; }
+    #content { padding: 16px 14px 100px; }
+    #header { padding: 0 14px; }
+    .g-4, .g-3, .g-2-1, .g-1-1 { grid-template-columns: 1fr; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-main .display { font-size: 30px; }
+    .drawer { width: 100vw; max-width: 100vw; }
+    #bottom-nav { display: flex; }
+  }
+  #bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(8,9,10,0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--border); padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
+  .bn-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; background: none; border: none; color: var(--text3); font-size: 9.5px; }
+  .bn-btn.active { color: var(--accent); }
+  .bn-btn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <aside id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">W</div>
+      <div class="sb-brand-text">Wealth OS</div>
+    </div>
+
+    <div class="sb-nav">
+      <button class="sb-item active" data-section="dashboard" onclick="go('dashboard')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard <span class="sb-shortcut">1</span>
+      </button>
+      <button class="sb-item" data-section="cashflow" onclick="go('cashflow')">
+        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Cashflow <span class="sb-shortcut">2</span>
+      </button>
+      <button class="sb-item" data-section="portfolio" onclick="go('portfolio')">
+        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+        Portafolio <span class="sb-shortcut">3</span>
+      </button>
+      <button class="sb-item" data-section="strategy" onclick="go('strategy')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        Strategy <span class="sb-shortcut">4</span>
+      </button>
+      <button class="sb-item" data-section="business" onclick="go('business')">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Business <span class="sb-shortcut">5</span>
+      </button>
+      <button class="sb-item" data-section="goals" onclick="go('goals')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        Goals <span class="sb-shortcut">6</span>
+      </button>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-row"><span>UF</span><span id="sb-uf">—</span></div>
+      <div class="sb-footer-row"><span>USD</span><span id="sb-usd">—</span></div>
+      <div class="sb-footer-row" style="margin-top:8px;color:var(--text3);"><span>v0.2</span><span>single tenant</span></div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <header id="header">
+      <div class="h-title" id="h-title">Dashboard</div>
+      <div class="h-actions">
+        <button class="cmd-trigger" onclick="openCmdK()">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          Buscar o acción <kbd>⌘K</kbd>
+        </button>
+      </div>
+    </header>
+
+    <div id="content">
+
+      <!-- DASHBOARD -->
+      <section class="section active" id="sec-dashboard">
+        <div class="hero">
+          <div class="hero-main">
+            <div class="label">Flujo libre este mes</div>
+            <div class="display" id="d-free-flow">—</div>
+            <div class="ssub">
+              <span id="d-free-spark"></span>
+              <span class="delta" id="d-free-delta">—</span>
+              <span class="muted-2">vs promedio 6m</span>
+            </div>
+          </div>
+          <div class="hero-side">
+            <div class="label">Patrimonio</div>
+            <div class="val" id="d-networth">—</div>
+            <div class="vsub" id="d-networth-uf">— UF</div>
+          </div>
+          <div class="hero-side">
+            <div class="label">Liquidez</div>
+            <div class="val" id="d-runway">—</div>
+            <div class="vsub" id="d-runway-cash">—</div>
+          </div>
+          <div class="hero-side">
+            <div class="label">Leverage</div>
+            <div class="val" id="d-leverage">—</div>
+            <div class="vsub" id="d-leverage-zone">—</div>
+          </div>
+        </div>
+
+        <div class="grid g-2-1" style="margin-bottom:16px;">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <div class="label">Patrimonio · 12 meses</div>
+              <select id="d-proj-period" onchange="renderDashboard()" style="width:auto;font-size:11px;padding:5px 24px 5px 8px;">
+                <option value="12">12 meses</option>
+                <option value="24">24 meses</option>
+                <option value="60">5 años</option>
+              </select>
+            </div>
+            <div class="chart-wrap" style="height:200px;">
+              <canvas id="d-nw-chart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="label" style="margin-bottom:12px;">Allocation</div>
+            <div id="d-alloc-list"></div>
+          </div>
+        </div>
+
+        <div class="grid g-1-1" style="margin-bottom:16px;">
+          <div class="card">
+            <div class="label" style="margin-bottom:10px;">Top goals activos</div>
+            <div id="d-goals-list"></div>
+          </div>
+          <div class="card">
+            <div class="label" style="margin-bottom:10px;">Resumen del mes</div>
+            <div id="d-briefing" style="font-size:13px;color:var(--text2);line-height:1.6;">—</div>
+          </div>
+        </div>
+
+        <div id="d-alerts"></div>
+      </section>
+
+      <!-- CASHFLOW -->
+      <section class="section" id="sec-cashflow">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+          <div style="flex:1;">
+            <div class="label">Capacidad de inversión este mes (proyectado)</div>
+            <div class="display num" id="cf-capacity" style="font-size:24px;">—</div>
+            <div class="sub" id="cf-capacity-sub">—</div>
+          </div>
+          <div style="text-align:right;">
+            <input type="file" id="csv-file" accept=".csv,text/csv" style="display:none;" onchange="importCSV(event)">
+            <button class="btn ghost btn-icon sm" onclick="document.getElementById('csv-file').click()">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              CSV
+            </button>
+            <button class="btn primary sm btn-icon" onclick="openTxForm()">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Movimiento
+            </button>
+          </div>
+        </div>
+
+        <div class="grid g-2-1">
+          <div class="card" style="padding:0;">
+            <div style="padding:12px 16px;display:flex;gap:8px;align-items:center;border-bottom:0.5px solid var(--border);">
+              <input type="text" id="tx-q" placeholder="Buscar  /  para enfocar" style="max-width:260px;" oninput="renderCashflow()">
+              <select id="tx-month" onchange="renderCashflow()" style="width:auto;">
+                <option value="">Todos los meses</option>
+              </select>
+              <select id="tx-cat" onchange="renderCashflow()" style="width:auto;">
+                <option value="">Todas categorías</option>
+              </select>
+              <span style="margin-left:auto;font-size:11px;color:var(--text3);" id="tx-count">—</span>
+            </div>
+            <div style="overflow-x:auto;max-height:540px;overflow-y:auto;">
+              <table class="tbl" id="tx-tbl">
+                <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Cuenta</th><th class="r">Monto</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="empty" id="tx-empty" style="display:none;">Sin movimientos. <kbd>⌘K</kbd> → "agregar movimiento"</div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <div class="label">Cuentas</div>
+                <button class="btn ghost sm" onclick="openAccForm()">+</button>
+              </div>
+              <div id="cf-accounts"></div>
+            </div>
+            <div class="card">
+              <div class="label" style="margin-bottom:10px;">Flujo · 6 meses</div>
+              <div class="chart-wrap" style="height:160px;">
+                <canvas id="cf-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PORTFOLIO -->
+      <section class="section" id="sec-portfolio">
+        <div class="grid g-4" style="margin-bottom:16px;">
+          <div class="card card-tight"><div class="label">Valor total</div><div style="font-size:20px;font-weight:600;margin-top:6px;letter-spacing:-0.02em;" class="num" id="pf-total">—</div><div class="sub" id="pf-total-uf">—</div></div>
+          <div class="card card-tight"><div class="label">P/L total</div><div style="font-size:20px;font-weight:600;margin-top:6px;letter-spacing:-0.02em;" class="num" id="pf-pnl">—</div><div class="sub" id="pf-return">—</div></div>
+          <div class="card card-tight"><div class="label">Plusvalía RE</div><div style="font-size:20px;font-weight:600;margin-top:6px;letter-spacing:-0.02em;" class="num" id="pf-plusvalia">—</div><div class="sub" id="pf-plusvalia-pct">—</div></div>
+          <div class="card card-tight"><div class="label">Rendimiento ponderado</div><div style="font-size:20px;font-weight:600;margin-top:6px;letter-spacing:-0.02em;" class="num" id="pf-yield">—</div><div class="sub">anualizado est.</div></div>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-bottom:14px;">
+          <button class="pill blue" data-pf-filter="all" onclick="filterPortfolio('all')" style="cursor:pointer;border:none;">Todo</button>
+          <button class="pill gray" data-pf-filter="liquid" onclick="filterPortfolio('liquid')" style="cursor:pointer;border:none;">Líquido</button>
+          <button class="pill gray" data-pf-filter="real_estate" onclick="filterPortfolio('real_estate')" style="cursor:pointer;border:none;">Inmobiliario</button>
+          <button class="pill gray" data-pf-filter="income" onclick="filterPortfolio('income')" style="cursor:pointer;border:none;">Income-generating</button>
+          <div style="margin-left:auto;display:flex;gap:6px;">
+            <button class="btn ghost sm btn-icon" onclick="openPropertyForm()"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V21h-6v-7H9v7H3z"/></svg> Propiedad</button>
+            <button class="btn primary sm btn-icon" onclick="openInvForm()">+ Inversión</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table class="tbl" id="pf-tbl">
+              <thead><tr><th>Holding</th><th>Tipo</th><th class="r">Cantidad / UF</th><th class="r">Valor</th><th class="r">P/L</th><th>Métrica</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="pf-empty" style="display:none;">Sin holdings. <kbd>⌘K</kbd> para agregar.</div>
+        </div>
+      </section>
+
+      <!-- STRATEGY -->
+      <section class="section" id="sec-strategy">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;">
+          <div style="flex:1;">
+            <h2 style="font-size:17px;letter-spacing:-0.03em;">¿Qué pasa si...?</h2>
+            <div class="sub" style="margin-top:2px;">Modelá decisiones. Vemos impacto en patrimonio, liquidez y goals.</div>
+          </div>
+          <button class="btn primary btn-icon sm" onclick="openCmdK('Strategy: ')">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo escenario
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:140px 1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+          <button class="btn sm" onclick="newScenarioTemplate('auto')">Comprar auto</button>
+          <button class="btn sm" onclick="newScenarioTemplate('property')">Comprar depto</button>
+          <button class="btn sm" onclick="newScenarioTemplate('savings')">Cambiar ahorro</button>
+          <button class="btn sm" onclick="newScenarioTemplate('business')">Iniciar negocio</button>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <div id="scn-list"></div>
+          <div class="empty" id="scn-empty" style="display:none;">Sin escenarios guardados. Empezá con un template o <kbd>⌘K</kbd>.</div>
+        </div>
+      </section>
+
+      <!-- BUSINESS -->
+      <section class="section" id="sec-business">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <div class="label">Contribución al flujo libre</div>
+            <div class="display num" id="bz-contrib" style="font-size:24px;">—</div>
+            <div class="sub" id="bz-summary">—</div>
+          </div>
+          <button class="btn primary btn-icon sm" onclick="openBzForm()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo negocio
+          </button>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <table class="tbl" id="bz-tbl">
+            <thead><tr><th>Nombre</th><th>Status</th><th class="r">Ingreso/mes</th><th class="r">Costos/mes</th><th class="r">Margen</th><th class="r">% Margen</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="empty" id="bz-empty" style="display:none;">Sin negocios. Click + para agregar.</div>
+        </div>
+      </section>
+
+      <!-- GOALS -->
+      <section class="section" id="sec-goals">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <h2 style="font-size:17px;letter-spacing:-0.03em;">Goals patrimoniales</h2>
+            <div class="sub" style="margin-top:2px;">Cada decisión se compara contra estos objetivos.</div>
+          </div>
+          <button class="btn primary btn-icon sm" onclick="openGoalForm()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo goal
+          </button>
+        </div>
+
+        <div class="grid g-3" id="goals-grid"></div>
+        <div class="empty" id="goals-empty" style="display:none;">Sin goals todavía. Empezá creando "Primer departamento" o "Patrimonio CLP 100M".</div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Drawer -->
+<div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div>
+      <h2 id="dr-title">—</h2>
+      <div class="sub" id="dr-sub">—</div>
+    </div>
+    <button class="btn ghost sm" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="dr-body"></div>
+  <div class="drawer-foot" id="dr-foot">
+    <button class="btn" onclick="closeDrawer()">Cancelar</button>
+    <button class="btn primary" id="dr-save" onclick="drawerSave()">Guardar</button>
+  </div>
+</div>
+
+<!-- Cmd-K -->
+<div class="cmdk-bg" id="cmdk-bg" onclick="if(event.target===this)closeCmdK()">
+  <div class="cmdk">
+    <div class="cmdk-input-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input class="cmdk-input" id="cmdk-input" placeholder="Buscar acción, sección, escenario..." oninput="cmdkRender()" autocomplete="off">
+    </div>
+    <div class="cmdk-list" id="cmdk-list"></div>
+  </div>
+</div>
+
+<!-- Drag overlay -->
+<div id="drag-overlay"><div class="msg">Soltá el CSV para importar movimientos</div></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Mobile bottom nav -->
+<nav id="bottom-nav">
+  <button class="bn-btn active" data-section="dashboard" onclick="go('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dash</button>
+  <button class="bn-btn" data-section="cashflow" onclick="go('cashflow')"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>Cash</button>
+  <button class="bn-btn" data-section="portfolio" onclick="go('portfolio')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>Portaf.</button>
+  <button class="bn-btn" data-section="strategy" onclick="go('strategy')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Strat.</button>
+  <button class="bn-btn" data-section="goals" onclick="go('goals')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg>Goals</button>
+</nav>
+
+<script>
+"use strict";
+
+/* ============================================================
+   WEALTH OS v0.2 — Refined PWA
+   ============================================================ */
+
+const LS_KEY = "wos_v2_state";
+
+/* ============ STATE ============ */
+function emptyState() {
+  return {
+    settings: { uf: 39345, usd: 952, cushion_clp: 4000000, base_currency: "CLP" },
+    accounts: [],
+    transactions: [],
+    investments: [],
+    properties: [],
+    businesses: [],
+    goals: [],
+    scenarios: [],
+  };
+}
+
+function demoState() {
+  const today = new Date();
+  const iso = d => d.toISOString().slice(0, 10);
+  const ago = m => { const d=new Date(today); d.setMonth(d.getMonth()-m); return iso(d); };
+  const accounts = [
+    { id: 1, name: "Cuenta Corriente BCI",      bank: "BCI",         type: "checking", balance: 4_800_000,  currency: "CLP" },
+    { id: 2, name: "Cuenta Ahorro BancoEstado", bank: "BancoEstado", type: "savings",  balance: 8_500_000,  currency: "CLP" },
+    { id: 3, name: "TC Santander",              bank: "Santander",   type: "credit",   balance: -720_000,   currency: "CLP" },
+    { id: 4, name: "Mercado Pago",              bank: "MercadoPago", type: "cash",     balance: 340_000,    currency: "CLP" },
+  ];
+  const txCats = [
+    { name: "Salario",       in: true,  amount: 3_500_000, freq: 30 },
+    { name: "Dividendos",    in: true,  amount: 85_000,    freq: 30 },
+    { name: "Arriendo",      in: true,  amount: 580_000,   freq: 30 },
+    { name: "Supermercado",  in: false, amount: -420_000,  freq: 7  },
+    { name: "Restaurantes",  in: false, amount: -65_000,   freq: 4  },
+    { name: "Transporte",    in: false, amount: -25_000,   freq: 3  },
+    { name: "Suscripciones", in: false, amount: -32_000,   freq: 30 },
+    { name: "Salud",         in: false, amount: -180_000,  freq: 30 },
+    { name: "Servicios",     in: false, amount: -95_000,   freq: 30 },
+    { name: "Educación",     in: false, amount: -150_000,  freq: 30 },
+  ];
+  const transactions = [];
+  let id = 1000;
+  for (let day = 0; day < 180; day++) {
+    const date = iso(new Date(today.getTime() - day * 86400000));
+    for (const c of txCats) {
+      if (day % c.freq === 0) {
+        transactions.push({
+          id: id++, date,
+          account_id: c.in ? 1 : (Math.random() < 0.6 ? 1 : 3),
+          description: c.name, category: c.name,
+          amount: Math.round(c.amount * (0.85 + Math.random() * 0.3)),
+          currency: "CLP",
+        });
+      }
+    }
+  }
+  const investments = [
+    { id: 1, ticker: "VOO", name: "Vanguard S&P 500", type: "etf", quantity: 18, avg_cost: 380, current_price: 478, currency: "USD", broker: "Fintual" },
+    { id: 2, ticker: "VWO", name: "Vanguard Emerging Markets", type: "etf", quantity: 35, avg_cost: 42, current_price: 46, currency: "USD", broker: "Fintual" },
+    { id: 3, ticker: "QQQ", name: "Invesco Nasdaq-100", type: "etf", quantity: 8, avg_cost: 340, current_price: 485, currency: "USD", broker: "Fintual" },
+    { id: 4, ticker: "BNDW", name: "Vanguard Total World Bond", type: "etf", quantity: 25, avg_cost: 71, current_price: 73, currency: "USD", broker: "Fintual" },
+    { id: 5, ticker: "FF-USA", name: "Fondo Mutuo USA Equity", type: "mutual_fund", quantity: 1, avg_cost: 2500000, current_price: 2980000, currency: "CLP", broker: "Banco Estado" },
+  ];
+  const properties = [
+    { id: 1, name: "Depto Ñuñoa", address: "Av. Irarrázaval 3450 #802",
+      purchase_value_uf: 3200, purchase_date: "2024-03-15", current_value_uf: 3450,
+      downpayment_clp: 25_000_000,
+      mortgage_principal_uf: 2560, mortgage_rate: 4.7, mortgage_years: 25, mortgage_start: "2024-04-01",
+      monthly_payment_uf: 14.2, monthly_rent_clp: 580_000, monthly_expenses_clp: 180_000, status: "rental" },
+  ];
+  const businesses = [
+    { id: 1, name: "Consultoría BI freelance", started_date: "2025-08-01", monthly_revenue: 850_000, monthly_costs: 120_000, status: "active" },
+  ];
+  const goals = [
+    { id: 1, name: "Segundo departamento", type: "asset_down", target_value: 30_000_000, target_date: ago(-36), notes: "Pie 20% para depto de 3500 UF" },
+    { id: 2, name: "Patrimonio CLP 100M",  type: "net_worth",  target_value: 100_000_000, target_date: ago(-30), notes: "" },
+    { id: 3, name: "Independencia parcial",type: "passive_income", target_value: 1_200_000, target_date: ago(-72), notes: "Ingreso pasivo de CLP 1.2M/mes" },
+    { id: 4, name: "Mazda 3 cash",         type: "net_worth",  target_value: 75_000_000, target_date: ago(-12), notes: "Mantener NW ≥ 75M sin financiar el auto" },
+  ];
+  return { settings: { uf: 39345, usd: 952, cushion_clp: 4_000_000, base_currency: "CLP" },
+           accounts, transactions, investments, properties, businesses, goals, scenarios: [] };
+}
+
+let state = null;
+function loadState() {
+  try { state = JSON.parse(localStorage.getItem(LS_KEY)) || demoState(); }
+  catch { state = demoState(); }
+  if (!state.settings) state = demoState();
+  if (!state.goals) state.goals = [];
+  if (!state.scenarios) state.scenarios = [];
+}
+function saveState() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+/* ============ FORMATTERS ============ */
+const NF = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
+const NF2 = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 2 });
+function fmtCLP(n) { if (n == null || isNaN(n)) return "—"; return "$" + NF.format(Math.round(n)); }
+function fmtShort(n) {
+  if (n == null || isNaN(n)) return "—";
+  const a = Math.abs(n), s = n < 0 ? "-" : "";
+  if (a >= 1e9) return s + "$" + NF2.format(a / 1e9) + "B";
+  if (a >= 1e6) return s + "$" + NF2.format(a / 1e6) + "M";
+  if (a >= 1e3) return s + "$" + NF.format(Math.round(a / 1e3)) + "K";
+  return s + "$" + NF.format(a);
+}
+function fmtUF(n) { if (n == null || isNaN(n)) return "—"; return NF2.format(n) + " UF"; }
+function fmtPct(n, d = 1) { if (n == null || isNaN(n)) return "—"; return n.toFixed(d) + "%"; }
+function fmtMonths(n) { if (n == null) return "—"; const a = Math.abs(n); const u = a === 1 ? "mes" : "meses"; return `${a.toFixed(0)} ${u}`; }
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function monthsBetween(a, b) {
+  const da = new Date(a), db = new Date(b);
+  return (db.getFullYear() - da.getFullYear()) * 12 + (db.getMonth() - da.getMonth());
+}
+function toCLP(amount, currency) {
+  if (currency === "CLP") return amount;
+  if (currency === "USD") return amount * state.settings.usd;
+  if (currency === "UF")  return amount * state.settings.uf;
+  return amount;
+}
+
+/* ============ FINANCIAL ENGINE ============ */
+function calcAssets() {
+  const cash = state.accounts.filter(a => a.type !== "credit").reduce((s, a) => s + toCLP(a.balance, a.currency), 0);
+  const invest = state.investments.reduce((s, i) => s + toCLP(i.quantity * i.current_price, i.currency), 0);
+  const realEstate = state.properties.reduce((s, p) => s + p.current_value_uf * state.settings.uf, 0);
+  return { cash, invest, realEstate, total: cash + invest + realEstate };
+}
+function remainingMortgageUF(p) {
+  if (!p.mortgage_principal_uf) return 0;
+  const r = p.mortgage_rate / 100 / 12;
+  const n = p.mortgage_years * 12;
+  const m = p.monthly_payment_uf || (r > 0 ? p.mortgage_principal_uf * r / (1 - Math.pow(1 + r, -n)) : p.mortgage_principal_uf / n);
+  const start = new Date(p.mortgage_start);
+  const now = new Date();
+  const paid = Math.max(0, (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth()));
+  if (paid >= n) return 0;
+  if (r === 0) return Math.max(0, p.mortgage_principal_uf - m * paid);
+  return Math.max(0, p.mortgage_principal_uf * Math.pow(1 + r, paid) - m * (Math.pow(1 + r, paid) - 1) / r);
+}
+function calcLiabilities() {
+  const tc = state.accounts.filter(a => a.type === "credit").reduce((s, a) => s + Math.abs(toCLP(a.balance, a.currency)), 0);
+  const mortgageUF = state.properties.reduce((s, p) => s + remainingMortgageUF(p), 0);
+  const mortgage = mortgageUF * state.settings.uf;
+  return { tc, mortgage, total: tc + mortgage };
+}
+function calcNetWorth() { return calcAssets().total - calcLiabilities().total; }
+
+function cashFlowMonth(monthKey) {
+  const txs = state.transactions.filter(t => t.date.startsWith(monthKey));
+  const income = txs.filter(t => t.amount > 0).reduce((s, t) => s + toCLP(t.amount, t.currency), 0);
+  const expenses = txs.filter(t => t.amount < 0).reduce((s, t) => s + toCLP(-t.amount, t.currency), 0);
+  return { income, expenses, net: income - expenses };
+}
+function cashFlowSeries(months) {
+  const arr = [];
+  const now = new Date();
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    arr.push({ month: d.toISOString().slice(0, 7), ...cashFlowMonth(d.toISOString().slice(0, 7)) });
+  }
+  return arr;
+}
+function avgFreeFlow(months = 6) {
+  const s = cashFlowSeries(months).filter(m => m.income > 0); // ignore empty months
+  if (s.length === 0) return 0;
+  return s.reduce((sum, m) => sum + m.net, 0) / s.length;
+}
+function projectedFreeFlowThisMonth() {
+  const now = new Date();
+  const monthKey = now.toISOString().slice(0, 7);
+  const flow = cashFlowMonth(monthKey);
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  if (dayOfMonth < 7) return avgFreeFlow(); // too early
+  const ratio = daysInMonth / dayOfMonth;
+  return flow.net * ratio;
+}
+
+/* ============ PROJECTION ENGINE ============
+   project(opts) → array of monthly snapshots.
+   opts:
+     months           how many months forward
+     freeFlowDelta    extra monthly inflow (or negative for outflow)
+     cashDelta        one-time cash change (negative = down payment)
+     propertyDelta    one-time property asset value change
+     mortgageDelta    one-time new mortgage debt
+     extraMortgageMo  extra monthly mortgage payment (CLP)
+     investReturn     annual % expected investment return (default 7)
+     propAppreciation annual % expected property appreciation (default 3)
+*/
+function project(opts = {}) {
+  const months = opts.months || 60;
+  const flowDelta = opts.freeFlowDelta || 0;
+  const cashDelta = opts.cashDelta || 0;
+  const propDelta = opts.propertyDelta || 0;
+  const mortgageDelta = opts.mortgageDelta || 0;
+  const extraMortgage = opts.extraMortgageMo || 0;
+  const rInv = (opts.investReturn != null ? opts.investReturn : 7) / 100 / 12;
+  const rProp = (opts.propAppreciation != null ? opts.propAppreciation : 3) / 100 / 12;
+  const A = calcAssets();
+  const L = calcLiabilities();
+  let cash = A.cash + cashDelta;
+  let invest = A.invest;
+  let prop = A.realEstate + propDelta;
+  let debt = L.total + mortgageDelta;
+  const flow = avgFreeFlow() + flowDelta;
+  const points = [];
+  for (let m = 0; m <= months; m++) {
+    const nw = cash + invest + prop - debt;
+    points.push({ m, nw, cash, invest, prop, debt, passive: prop > 0 ? 580000 : 0 + invest * 0.025 / 12 });
+    // Grow
+    invest *= 1 + rInv;
+    prop *= 1 + rProp;
+    // Pay down debt (5%/yr blended amortization approximate)
+    if (debt > 0) {
+      const amort = Math.min(debt, debt * 0.005 + extraMortgage);
+      debt -= amort;
+    }
+    // Free flow → invest (full reinvestment above cash cushion)
+    const cushion = state.settings.cushion_clp || 4000000;
+    if (cash < cushion) {
+      cash += flow;
+      if (cash > cushion) { invest += cash - cushion; cash = cushion; }
+    } else {
+      invest += flow;
+    }
+  }
+  return points;
+}
+
+/* ============ GOAL ENGINE ============ */
+function passiveIncomeAt(point) {
+  // Approximation: rent net (from current rentals only) + 2.5% annual yield on investments
+  const rentNet = state.properties
+    .filter(p => p.status === "rental")
+    .reduce((s, p) => s + (p.monthly_rent_clp - (p.monthly_expenses_clp || 0)), 0);
+  return rentNet + (point.invest * 0.025) / 12;
+}
+function goalReachedMonth(projection, goal) {
+  for (let i = 0; i < projection.length; i++) {
+    const p = projection[i];
+    if (goal.type === "net_worth") { if (p.nw >= goal.target_value) return i; }
+    else if (goal.type === "invested_capital") { if (p.invest >= goal.target_value) return i; }
+    else if (goal.type === "asset_down") { if (p.cash + p.invest * 0.5 >= goal.target_value) return i; }
+    else if (goal.type === "passive_income") { if (passiveIncomeAt(p) >= goal.target_value) return i; }
+  }
+  return null;
+}
+function goalCurrentProgress(goal) {
+  const A = calcAssets(), L = calcLiabilities();
+  const nw = A.total - L.total;
+  if (goal.type === "net_worth") return nw / goal.target_value;
+  if (goal.type === "invested_capital") return A.invest / goal.target_value;
+  if (goal.type === "asset_down") return (A.cash + A.invest * 0.5) / goal.target_value;
+  if (goal.type === "passive_income") {
+    const p = passiveIncomeAt({ invest: A.invest });
+    return p / goal.target_value;
+  }
+  return 0;
+}
+function goalStatus(goal) {
+  const proj = project({ months: 120 });
+  const month = goalReachedMonth(proj, goal);
+  const targetMonths = monthsBetween(todayISO(), goal.target_date);
+  if (month === null) return { status: "at_risk", monthsToTarget: null, monthsDiff: null };
+  const diff = month - targetMonths; // positive = late, negative = early
+  let status;
+  const prog = goalCurrentProgress(goal);
+  if (prog >= 1) status = "completed";
+  else if (diff <= -2) status = "ahead";
+  else if (diff <= 1) status = "on_track";
+  else status = "behind";
+  return { status, monthsToTarget: month, monthsDiff: diff, projection: proj };
+}
+
+/* ============ SCENARIO ENGINE ============ */
+const SCN_TEMPLATES = {
+  auto: {
+    name: "Comprar auto",
+    icon: "🚗",
+    fields: [
+      { id: "price",   label: "Precio (CLP)",         type: "number", def: 18_000_000 },
+      { id: "down",    label: "Pie (CLP)",            type: "number", def: 4_000_000 },
+      { id: "rate",    label: "Tasa % anual",         type: "number", def: 9.5 },
+      { id: "term",    label: "Plazo (años)",         type: "number", def: 5 },
+      { id: "maint",   label: "Mantención/mes (CLP)", type: "number", def: 180_000 },
+    ],
+    compute(i) {
+      const r = i.rate / 100 / 12;
+      const n = i.term * 12;
+      const principal = i.price - i.down;
+      const monthly = principal > 0 ? (r > 0 ? principal * r / (1 - Math.pow(1 + r, -n)) : principal / n) : 0;
+      return {
+        cashDelta: -i.down,
+        freeFlowDelta: -(monthly + i.maint),
+        mortgageDelta: principal, // tratamos el préstamo de auto como deuda
+        propertyDelta: 0, // el auto se deprecia, no lo contamos como activo durable
+        monthlyPayment: monthly,
+        interestTotal: monthly * n - principal,
+      };
+    },
+    verdict(i, impact, baseline, scenario) {
+      return `Cuota ${fmtShort(impact.monthlyPayment)}/mes · TCO 5 años ${fmtShort((impact.monthlyPayment + i.maint) * 60 + i.down)}`;
+    }
+  },
+  property: {
+    name: "Comprar depto",
+    icon: "🏠",
+    fields: [
+      { id: "priceUF", label: "Precio (UF)",       type: "number", def: 3500 },
+      { id: "downPct",label: "Pie %",               type: "number", def: 20 },
+      { id: "rate",   label: "Tasa % anual",       type: "number", def: 4.8 },
+      { id: "term",   label: "Plazo (años)",       type: "number", def: 25 },
+      { id: "rent",   label: "Arriendo CLP/mes",   type: "number", def: 650_000 },
+      { id: "exp",    label: "Gastos CLP/mes",     type: "number", def: 180_000 },
+    ],
+    compute(i) {
+      const uf = state.settings.uf;
+      const priceCLP = i.priceUF * uf;
+      const downCLP = priceCLP * (i.downPct / 100);
+      const principalUF = i.priceUF * (1 - i.downPct / 100);
+      const r = i.rate / 100 / 12;
+      const n = i.term * 12;
+      const monthlyUF = principalUF * r / (1 - Math.pow(1 + r, -n));
+      const monthlyCLP = monthlyUF * uf;
+      const netRent = i.rent - i.exp;
+      return {
+        cashDelta: -downCLP,
+        propertyDelta: priceCLP,
+        mortgageDelta: principalUF * uf,
+        freeFlowDelta: netRent - monthlyCLP,
+        monthlyPayment: monthlyCLP,
+        netCashFlow: netRent - monthlyCLP,
+        priceCLP, downCLP,
+      };
+    },
+    verdict(i, impact) {
+      const cf = impact.netCashFlow;
+      return `Pie ${fmtShort(impact.downCLP)} · cuota ${fmtShort(impact.monthlyPayment)}/mes · neto ${cf >= 0 ? "+" : ""}${fmtShort(cf)}/mes`;
+    }
+  },
+  savings: {
+    name: "Cambiar tasa de ahorro",
+    icon: "↗",
+    fields: [
+      { id: "delta", label: "Δ aporte mensual (CLP)", type: "number", def: 300_000 },
+    ],
+    compute(i) {
+      return { freeFlowDelta: i.delta };
+    },
+    verdict(i, impact) { return `Aporte ${i.delta >= 0 ? "+" : ""}${fmtShort(i.delta)}/mes`; }
+  },
+  business: {
+    name: "Iniciar negocio",
+    icon: "◆",
+    fields: [
+      { id: "capital", label: "Capital inicial (CLP)", type: "number", def: 5_000_000 },
+      { id: "monthlyRev",   label: "Ingreso/mes proyectado", type: "number", def: 600_000 },
+      { id: "monthlyCost",  label: "Costo/mes",              type: "number", def: 250_000 },
+    ],
+    compute(i) {
+      return {
+        cashDelta: -i.capital,
+        freeFlowDelta: i.monthlyRev - i.monthlyCost,
+      };
+    },
+    verdict(i, impact) {
+      return `Capital ${fmtShort(i.capital)} · margen ${fmtShort(i.monthlyRev - i.monthlyCost)}/mes`;
+    }
+  },
+};
+
+function runScenario(scn) {
+  const tpl = SCN_TEMPLATES[scn.template];
+  if (!tpl) return null;
+  const impact = tpl.compute(scn.inputs);
+  const baseline = project({ months: 120 });
+  const scenarioProj = project({
+    months: 120,
+    cashDelta: impact.cashDelta || 0,
+    propertyDelta: impact.propertyDelta || 0,
+    mortgageDelta: impact.mortgageDelta || 0,
+    freeFlowDelta: impact.freeFlowDelta || 0,
+  });
+  // Compute deltas
+  const m0 = 0, m60 = 60;
+  const result = {
+    impact,
+    liquidityNow: scenarioProj[m0].cash,
+    liquidityBase: baseline[m0].cash,
+    freeFlow: avgFreeFlow() + (impact.freeFlowDelta || 0),
+    freeFlowBase: avgFreeFlow(),
+    leverageNow: scenarioProj[m0].nw > 0 ? scenarioProj[m0].debt / (scenarioProj[m0].nw + scenarioProj[m0].debt) * 100 : 0,
+    leverageBase: baseline[m0].nw > 0 ? baseline[m0].debt / (baseline[m0].nw + baseline[m0].debt) * 100 : 0,
+    nw5y: scenarioProj[m60].nw,
+    nw5yBase: baseline[m60].nw,
+    nwDelta5y: scenarioProj[m60].nw - baseline[m60].nw,
+    goalImpacts: [],
+    baseline,
+    scenarioProj,
+  };
+  for (const g of state.goals) {
+    const baseMonth = goalReachedMonth(baseline, g);
+    const scnMonth = goalReachedMonth(scenarioProj, g);
+    let diff = null;
+    if (baseMonth != null && scnMonth != null) diff = scnMonth - baseMonth;
+    else if (baseMonth == null && scnMonth != null) diff = -baseMonth;
+    else if (baseMonth != null && scnMonth == null) diff = 999;
+    result.goalImpacts.push({ goal: g, baseMonth, scnMonth, diff });
+  }
+  return result;
+}
+
+/* ============ NAVIGATION ============ */
+const SECTION_META = {
+  dashboard: { title: "Dashboard" },
+  cashflow:  { title: "Cashflow" },
+  portfolio: { title: "Portafolio" },
+  strategy:  { title: "Strategy" },
+  business:  { title: "Business" },
+  goals:     { title: "Goals" },
+};
+function go(id) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById("sec-" + id).classList.add("active");
+  document.querySelectorAll(".sb-item, .bn-btn").forEach(b => b.classList.toggle("active", b.dataset.section === id));
+  document.getElementById("h-title").textContent = SECTION_META[id].title;
+  window.scrollTo(0, 0);
+  if (id === "dashboard") renderDashboard();
+  else if (id === "cashflow") renderCashflow();
+  else if (id === "portfolio") renderPortfolio();
+  else if (id === "strategy") renderStrategy();
+  else if (id === "business") renderBusiness();
+  else if (id === "goals") renderGoals();
+}
+
+/* ============ TOAST ============ */
+function toast(msg, type) {
+  const t = document.getElementById("toast");
+  t.className = type || "";
+  t.textContent = msg;
+  setTimeout(() => t.classList.add("show"), 10);
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+/* ============ DRAWER (generic form) ============ */
+let drawerContext = null;
+function openDrawer(title, sub, bodyHTML, ctx) {
+  document.getElementById("dr-title").textContent = title;
+  document.getElementById("dr-sub").textContent = sub || "";
+  document.getElementById("dr-body").innerHTML = bodyHTML;
+  drawerContext = ctx;
+  document.getElementById("drawer-bg").classList.add("open");
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("dr-foot").style.display = ctx && ctx.readonly ? "none" : "flex";
+}
+function closeDrawer() {
+  document.getElementById("drawer-bg").classList.remove("open");
+  document.getElementById("drawer").classList.remove("open");
+  drawerContext = null;
+}
+function drawerSave() {
+  if (!drawerContext) return;
+  drawerContext.onSave && drawerContext.onSave();
+}
+
+/* ============ CMD-K ============ */
+let cmdkIndex = 0;
+let cmdkVisible = [];
+const COMMANDS = [
+  { id: "go-1", label: "Ir a Dashboard", group: "Navegación", icon: "1", run: () => go("dashboard") },
+  { id: "go-2", label: "Ir a Cashflow",  group: "Navegación", icon: "2", run: () => go("cashflow") },
+  { id: "go-3", label: "Ir a Portafolio", group: "Navegación", icon: "3", run: () => go("portfolio") },
+  { id: "go-4", label: "Ir a Strategy",  group: "Navegación", icon: "4", run: () => go("strategy") },
+  { id: "go-5", label: "Ir a Business",  group: "Navegación", icon: "5", run: () => go("business") },
+  { id: "go-6", label: "Ir a Goals",     group: "Navegación", icon: "6", run: () => go("goals") },
+  { id: "add-tx",   label: "Agregar movimiento", group: "Crear", icon: "+", run: () => openTxForm() },
+  { id: "add-inv",  label: "Agregar inversión",  group: "Crear", icon: "+", run: () => openInvForm() },
+  { id: "add-pr",   label: "Agregar propiedad",  group: "Crear", icon: "+", run: () => openPropertyForm() },
+  { id: "add-acc",  label: "Agregar cuenta",     group: "Crear", icon: "+", run: () => openAccForm() },
+  { id: "add-bz",   label: "Agregar negocio",    group: "Crear", icon: "+", run: () => openBzForm() },
+  { id: "add-goal", label: "Crear goal",         group: "Crear", icon: "+", run: () => openGoalForm() },
+  { id: "scn-auto",     label: "Nuevo escenario · Comprar auto", group: "Strategy", icon: "◆", run: () => newScenarioTemplate("auto") },
+  { id: "scn-property", label: "Nuevo escenario · Comprar depto", group: "Strategy", icon: "◆", run: () => newScenarioTemplate("property") },
+  { id: "scn-savings",  label: "Nuevo escenario · Cambiar ahorro", group: "Strategy", icon: "◆", run: () => newScenarioTemplate("savings") },
+  { id: "scn-business", label: "Nuevo escenario · Iniciar negocio", group: "Strategy", icon: "◆", run: () => newScenarioTemplate("business") },
+  { id: "export", label: "Exportar backup JSON", group: "Sistema", icon: "⬇", run: () => exportData() },
+  { id: "import", label: "Importar backup JSON", group: "Sistema", icon: "⬆", run: () => { document.getElementById("import-file-hidden").click(); } },
+  { id: "rates",  label: "Actualizar UF / USD",  group: "Sistema", icon: "↻", run: () => openRatesForm() },
+  { id: "demo",   label: "Cargar datos demo",    group: "Sistema", icon: "●", run: () => loadDemo() },
+  { id: "clear",  label: "Borrar todos los datos", group: "Sistema", icon: "⚠", run: () => clearAll() },
+];
+
+function openCmdK(prefix) {
+  document.getElementById("cmdk-bg").classList.add("open");
+  const input = document.getElementById("cmdk-input");
+  input.value = prefix || "";
+  cmdkIndex = 0;
+  cmdkRender();
+  setTimeout(() => input.focus(), 50);
+}
+function closeCmdK() { document.getElementById("cmdk-bg").classList.remove("open"); }
+function cmdkRender() {
+  const q = document.getElementById("cmdk-input").value.trim().toLowerCase();
+  const dynScenarios = state.scenarios.map(s => ({
+    id: "open-scn-" + s.id, label: `Abrir escenario · ${s.name}`, group: "Escenarios guardados", icon: SCN_TEMPLATES[s.template]?.icon || "◆",
+    run: () => openScenarioDetail(s.id),
+  }));
+  const all = [...COMMANDS, ...dynScenarios];
+  cmdkVisible = q ? all.filter(c => c.label.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : all;
+  const groups = {};
+  cmdkVisible.forEach((c, i) => { if (!groups[c.group]) groups[c.group] = []; groups[c.group].push({ ...c, _idx: i }); });
+  const list = document.getElementById("cmdk-list");
+  if (cmdkVisible.length === 0) { list.innerHTML = '<div class="cmdk-empty">Sin resultados</div>'; return; }
+  list.innerHTML = Object.entries(groups).map(([g, items]) => `
+    <div class="cmdk-section">${g}</div>
+    ${items.map(it => `
+      <div class="cmdk-item${it._idx === cmdkIndex ? " active" : ""}" data-idx="${it._idx}" onclick="cmdkRun(${it._idx})">
+        <div class="ic">${it.icon}</div>
+        <div>${it.label}</div>
+        <div class="desc">${it._idx === cmdkIndex ? "⏎" : ""}</div>
+      </div>`).join("")}
+  `).join("");
+}
+function cmdkRun(i) {
+  const cmd = cmdkVisible[i];
+  if (!cmd) return;
+  closeCmdK();
+  setTimeout(() => cmd.run(), 50);
+}
+
+/* ============ DASHBOARD ============ */
+let dNwChart = null;
+function renderDashboard() {
+  const A = calcAssets(), L = calcLiabilities();
+  const nw = A.total - L.total;
+  const projFlow = projectedFreeFlowThisMonth();
+  const avgFlow = avgFreeFlow();
+  document.getElementById("d-free-flow").textContent = fmtShort(projFlow);
+  const flowDeltaPct = avgFlow > 0 ? (projFlow - avgFlow) / Math.abs(avgFlow) * 100 : 0;
+  const deltaEl = document.getElementById("d-free-delta");
+  deltaEl.textContent = (projFlow > avgFlow ? "+" : "") + fmtPct(flowDeltaPct, 0);
+  deltaEl.className = "delta " + (projFlow > avgFlow * 1.02 ? "pos" : projFlow < avgFlow * 0.98 ? "neg" : "flat");
+  document.getElementById("d-networth").textContent = fmtShort(nw);
+  document.getElementById("d-networth-uf").textContent = (nw / state.settings.uf).toFixed(0) + " UF";
+  // Runway
+  const burn = -Math.min(0, avgFlow) + Math.max(0, cashFlowSeries(3).reduce((s,m)=>s+m.expenses,0)/3 - cashFlowSeries(3).reduce((s,m)=>s+m.income,0)/3);
+  const expenses3 = cashFlowSeries(3).filter(m=>m.expenses>0).reduce((s,m)=>s+m.expenses,0) / Math.max(1, cashFlowSeries(3).filter(m=>m.expenses>0).length);
+  const runwayMonths = expenses3 > 0 ? A.cash / expenses3 : 99;
+  document.getElementById("d-runway").textContent = (runwayMonths > 99 ? "99+" : runwayMonths.toFixed(1)) + " meses";
+  document.getElementById("d-runway-cash").textContent = fmtShort(A.cash) + " cash";
+  // Leverage
+  const lev = nw + L.total > 0 ? L.total / (nw + L.total) * 100 : 0;
+  document.getElementById("d-leverage").textContent = fmtPct(lev);
+  const zone = lev < 20 ? { label: "conservador", color: "var(--text2)" } : lev < 40 ? { label: "balanceado", color: "var(--green)" } : lev < 60 ? { label: "agresivo", color: "var(--orange)" } : { label: "alto riesgo", color: "var(--red)" };
+  const lz = document.getElementById("d-leverage-zone");
+  lz.textContent = zone.label;
+  lz.style.color = zone.color;
+
+  // Projection chart
+  const months = parseInt(document.getElementById("d-proj-period").value) || 12;
+  const proj = project({ months });
+  const labels = proj.map((_, i) => {
+    const d = new Date(); d.setMonth(d.getMonth() + i);
+    return i % Math.max(1, Math.floor(months / 12)) === 0 ? d.toLocaleDateString("es-CL", { month: "short" }) : "";
+  });
+  const ctx = document.getElementById("d-nw-chart");
+  if (dNwChart) dNwChart.destroy();
+  dNwChart = new Chart(ctx, {
+    type: "line",
+    data: { labels, datasets: [{ data: proj.map(p => p.nw), borderColor: "#5e90ff", backgroundColor: "rgba(94,144,255,0.07)", borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: true }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmtCLP(c.parsed.y), title: items => "Mes +" + items[0].parsed.x } } },
+      scales: {
+        x: { ticks: { color: "#5e6066", font: { size: 9 } }, grid: { display: false } },
+        y: { ticks: { color: "#5e6066", font: { size: 9 }, callback: v => fmtShort(v) }, grid: { color: "rgba(255,255,255,0.03)" } }
+      }
+    }
+  });
+
+  // Allocation
+  const total = A.total;
+  const alloc = [
+    { label: "Cash",         val: A.cash,       color: "#5e90ff" },
+    { label: "Inversiones",  val: A.invest,     color: "#34c77b" },
+    { label: "Inmobiliario", val: A.realEstate, color: "#f97316" },
+  ].filter(a => a.val > 0);
+  document.getElementById("d-alloc-list").innerHTML = alloc.map(a => `
+    <div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+        <span style="color:var(--text);"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${a.color};margin-right:8px;"></span>${a.label}</span>
+        <span class="num muted">${fmtPct(a.val/total*100, 0)} · ${fmtShort(a.val)}</span>
+      </div>
+      <div style="height:3px;background:var(--bg3);border-radius:3px;"><div style="height:100%;width:${(a.val/total*100).toFixed(1)}%;background:${a.color};border-radius:3px;"></div></div>
+    </div>
+  `).join("");
+
+  // Goals (top 3 active)
+  const activeGoals = state.goals.slice(0, 3);
+  document.getElementById("d-goals-list").innerHTML = activeGoals.length ? activeGoals.map(g => {
+    const st = goalStatus(g);
+    const prog = Math.min(1, Math.max(0, goalCurrentProgress(g)));
+    const pill = st.status === "completed" ? '<span class="pill green">completado</span>'
+               : st.status === "ahead" ? `<span class="pill green">${fmtMonths(Math.abs(st.monthsDiff))} adelantado</span>`
+               : st.status === "on_track" ? '<span class="pill blue">on track</span>'
+               : st.status === "behind" ? `<span class="pill orange">${fmtMonths(st.monthsDiff)} atrasado</span>`
+               : '<span class="pill red">at risk</span>';
+    return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;" onclick="openGoalDetail(${g.id})">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div style="font-size:12.5px;font-weight:500;">${g.name}</div>
+        ${pill}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;" class="num">
+        <span>${(prog*100).toFixed(0)}%</span>
+        <span>${fmtShort(goalCurrentValue(g))} / ${fmtShort(g.target_value)}</span>
+      </div>
+      <div class="goal-bar"><div class="fill ${prog>=1?'green':prog>=0.5?'':'orange'}" style="width:${(prog*100).toFixed(1)}%;"></div></div>
+    </div>`;
+  }).join("") : '<div class="empty">Sin goals. Creá uno desde <kbd>⌘K</kbd>.</div>';
+
+  // Briefing
+  const month = new Date().toLocaleDateString("es-CL", { month: "long" });
+  const lastMonth = cashFlowSeries(1)[0];
+  const briefing = lastMonth.income > 0
+    ? `${month.charAt(0).toUpperCase()+month.slice(1)} va con flujo libre proyectado de <strong>${fmtShort(projFlow)}</strong>. ${projFlow > avgFlow ? "Por arriba del promedio." : "Por debajo del promedio."} Patrimonio neto en <strong>${fmtShort(nw)}</strong>. Leverage en zona ${zone.label}.`
+    : `Sin movimientos suficientes en ${month}. Importá tu cartola o agregá movimientos con <kbd>⌘K</kbd>.`;
+  document.getElementById("d-briefing").innerHTML = briefing;
+
+  // Alerts
+  const alerts = [];
+  if (runwayMonths < 4) alerts.push({ severity: "red", text: `Liquidez crítica: ${runwayMonths.toFixed(1)} meses de runway` });
+  if (lev > 60) alerts.push({ severity: "orange", text: `Leverage alto (${lev.toFixed(0)}%) — capacidad de hipoteca futura limitada` });
+  state.goals.forEach(g => {
+    const st = goalStatus(g);
+    if (st.status === "at_risk") alerts.push({ severity: "red", text: `Goal "${g.name}" no alcanzable a la tasa actual de flujo libre` });
+  });
+  const aEl = document.getElementById("d-alerts");
+  aEl.innerHTML = alerts.length ? `<div class="card">${alerts.map(a => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);"><span class="pill ${a.severity}">!</span><span style="font-size:12.5px;">${a.text}</span></div>`).join("")}</div>` : "";
+}
+function goalCurrentValue(g) {
+  const A = calcAssets(), L = calcLiabilities();
+  const nw = A.total - L.total;
+  if (g.type === "net_worth") return nw;
+  if (g.type === "invested_capital") return A.invest;
+  if (g.type === "asset_down") return A.cash + A.invest * 0.5;
+  if (g.type === "passive_income") return passiveIncomeAt({ invest: A.invest });
+  return 0;
+}
+
+/* ============ CASHFLOW ============ */
+let cfChart = null;
+function renderCashflow() {
+  // Capacity
+  const proj = projectedFreeFlowThisMonth();
+  const avg = avgFreeFlow();
+  document.getElementById("cf-capacity").textContent = fmtShort(Math.max(0, proj));
+  document.getElementById("cf-capacity-sub").innerHTML = `Proyectado a fin de mes. Promedio 6m: <span class="num">${fmtShort(avg)}</span>`;
+  // Accounts
+  document.getElementById("cf-accounts").innerHTML = state.accounts.length ? state.accounts.map(a => `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:12.5px;cursor:pointer;" onclick="openAccForm(${a.id})">
+      <div><span style="color:var(--text2);font-size:11px;">${a.bank || ""}</span> ${a.name}</div>
+      <div class="num ${a.balance>=0?'':'neg'}" style="${a.balance<0?'color:var(--red);':''}">${fmtShort(toCLP(a.balance, a.currency))}</div>
+    </div>
+  `).join("") : '<div class="empty">Sin cuentas</div>';
+  // Filters
+  const months = [...new Set(state.transactions.map(t => t.date.slice(0, 7)))].sort().reverse();
+  const cats = [...new Set(state.transactions.map(t => t.category).filter(Boolean))].sort();
+  const mSel = document.getElementById("tx-month"); const cm = mSel.value;
+  mSel.innerHTML = '<option value="">Todos los meses</option>' + months.map(m => `<option value="${m}">${m}</option>`).join("");
+  mSel.value = cm;
+  const cSel = document.getElementById("tx-cat"); const cc = cSel.value;
+  cSel.innerHTML = '<option value="">Todas categorías</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join("");
+  cSel.value = cc;
+  // Table
+  const q = document.getElementById("tx-q").value.toLowerCase();
+  const fM = mSel.value, fC = cSel.value;
+  let txs = state.transactions.slice().sort((a, b) => b.date.localeCompare(a.date));
+  if (q) txs = txs.filter(t => (t.description||"").toLowerCase().includes(q) || (t.category||"").toLowerCase().includes(q));
+  if (fM) txs = txs.filter(t => t.date.startsWith(fM));
+  if (fC) txs = txs.filter(t => t.category === fC);
+  document.getElementById("tx-count").textContent = txs.length + " movimientos";
+  txs = txs.slice(0, 300);
+  const accMap = Object.fromEntries(state.accounts.map(a => [a.id, a.name]));
+  const tbody = document.querySelector("#tx-tbl tbody");
+  tbody.innerHTML = txs.map((t, i) => {
+    const amt = toCLP(t.amount, t.currency);
+    return `<tr class="row" data-tx="${t.id}" tabindex="0">
+      <td style="color:var(--text2);">${t.date}</td>
+      <td>${t.description||"—"}</td>
+      <td><span class="pill gray">${t.category||"—"}</span></td>
+      <td style="color:var(--text2);">${accMap[t.account_id]||"—"}</td>
+      <td class="r ${amt>=0?'pos':'neg'}">${amt>=0?'+':''}${fmtShort(amt)}</td>
+    </tr>`;
+  }).join("");
+  document.getElementById("tx-empty").style.display = txs.length ? "none" : "block";
+  // Flow chart
+  const series = cashFlowSeries(6);
+  if (cfChart) cfChart.destroy();
+  cfChart = new Chart(document.getElementById("cf-chart"), {
+    type: "bar",
+    data: {
+      labels: series.map(s => new Date(s.month + "-01").toLocaleDateString("es-CL", { month: "short" })),
+      datasets: [
+        { label: "Ingresos", data: series.map(s => s.income),   backgroundColor: "rgba(52,199,123,0.8)", borderRadius: 3 },
+        { label: "Gastos",   data: series.map(s => s.expenses), backgroundColor: "rgba(239,77,77,0.6)",  borderRadius: 3 },
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#9ea0a4", font: { size: 10 } }, position: "bottom", align: "start" } },
+      scales: {
+        x: { ticks: { color: "#5e6066", font: { size: 9 } }, grid: { display: false } },
+        y: { ticks: { color: "#5e6066", font: { size: 9 }, callback: v => fmtShort(v) }, grid: { color: "rgba(255,255,255,0.03)" } }
+      }
+    }
+  });
+}
+
+/* ============ PORTFOLIO ============ */
+let pfFilter = "all";
+function filterPortfolio(f) {
+  pfFilter = f;
+  document.querySelectorAll("[data-pf-filter]").forEach(b => {
+    const active = b.getAttribute("data-pf-filter") === f;
+    b.className = "pill " + (active ? "blue" : "gray");
+  });
+  renderPortfolio();
+}
+function renderPortfolio() {
+  const A = calcAssets();
+  const invValue = state.investments.reduce((s, i) => s + toCLP(i.quantity * i.current_price, i.currency), 0);
+  const invCost = state.investments.reduce((s, i) => s + toCLP(i.quantity * i.avg_cost, i.currency), 0);
+  const reValue = state.properties.reduce((s, p) => s + p.current_value_uf * state.settings.uf, 0);
+  const reCost = state.properties.reduce((s, p) => s + p.purchase_value_uf * state.settings.uf, 0);
+  const plusvalia = reValue - reCost;
+  const pnl = (invValue - invCost) + plusvalia;
+  const total = invValue + reValue;
+  const ret = invCost > 0 ? (invValue - invCost) / invCost * 100 : 0;
+  document.getElementById("pf-total").textContent = fmtShort(total);
+  document.getElementById("pf-total-uf").textContent = (total / state.settings.uf).toFixed(0) + " UF";
+  document.getElementById("pf-pnl").textContent = (pnl >= 0 ? "+" : "") + fmtShort(pnl);
+  document.getElementById("pf-pnl").style.color = pnl >= 0 ? "var(--green)" : "var(--red)";
+  document.getElementById("pf-return").textContent = "Inversiones " + (ret >= 0 ? "+" : "") + fmtPct(ret);
+  document.getElementById("pf-plusvalia").textContent = (plusvalia >= 0 ? "+" : "") + fmtShort(plusvalia);
+  document.getElementById("pf-plusvalia-pct").textContent = reCost > 0 ? (plusvalia >= 0 ? "+" : "") + fmtPct(plusvalia / reCost * 100) : "—";
+  const wAvgYield = total > 0 ? (invValue * 0.07 + reValue * 0.05) / total * 100 : 0;
+  document.getElementById("pf-yield").textContent = fmtPct(wAvgYield);
+
+  // Table
+  const rows = [];
+  state.investments.forEach(i => {
+    const v = toCLP(i.quantity * i.current_price, i.currency);
+    const c = toCLP(i.quantity * i.avg_cost, i.currency);
+    const p = v - c;
+    const r = c > 0 ? p / c * 100 : 0;
+    rows.push({
+      _type: "inv", _id: i.id, _liquid: true, _income: false,
+      label: i.ticker, sub: i.name, type: i.type, qty: i.quantity, value: v, pnl: p, ret: r,
+      metric: `costo prom ${i.currency} ${NF2.format(i.avg_cost)} · precio ${i.currency} ${NF2.format(i.current_price)}`
+    });
+  });
+  state.properties.forEach(p => {
+    const v = p.current_value_uf * state.settings.uf;
+    const c = p.purchase_value_uf * state.settings.uf;
+    const pl = v - c;
+    const r = c > 0 ? pl / c * 100 : 0;
+    const remUF = remainingMortgageUF(p);
+    const cap = p.monthly_rent_clp ? ((p.monthly_rent_clp - (p.monthly_expenses_clp || 0)) * 12) / v * 100 : 0;
+    rows.push({
+      _type: "prop", _id: p.id, _liquid: false, _income: p.status === "rental",
+      label: p.name, sub: p.address || "", type: "Propiedad",
+      qty: p.current_value_uf, value: v, pnl: pl, ret: r,
+      metric: `equity ${fmtShort(v - remUF * state.settings.uf)} · cap ${fmtPct(cap)} · ${p.status}`
+    });
+  });
+  let filtered = rows;
+  if (pfFilter === "liquid") filtered = rows.filter(r => r._liquid);
+  if (pfFilter === "real_estate") filtered = rows.filter(r => r._type === "prop");
+  if (pfFilter === "income") filtered = rows.filter(r => r._income);
+  const tbody = document.querySelector("#pf-tbl tbody");
+  tbody.innerHTML = filtered.map(r => `<tr class="row" data-${r._type}="${r._id}" onclick="${r._type==='inv'?`openInvForm(${r._id})`:`openPropertyForm(${r._id})`}">
+    <td><div style="font-weight:500;">${r.label}</div><div style="font-size:11px;color:var(--text3);">${r.sub}</div></td>
+    <td><span class="pill gray">${r.type}</span></td>
+    <td class="r">${r._type==='prop' ? fmtUF(r.qty) : NF2.format(r.qty)}</td>
+    <td class="r">${fmtShort(r.value)}</td>
+    <td class="r ${r.pnl>=0?'pos':'neg'}">${r.pnl>=0?'+':''}${fmtPct(r.ret)}<br><span style="font-size:11px;color:var(--text3);">${fmtShort(r.pnl)}</span></td>
+    <td style="color:var(--text2);font-size:11.5px;">${r.metric}</td>
+  </tr>`).join("");
+  document.getElementById("pf-empty").style.display = filtered.length ? "none" : "block";
+}
+
+/* ============ STRATEGY ============ */
+function renderStrategy() {
+  const list = document.getElementById("scn-list");
+  if (!state.scenarios.length) {
+    list.innerHTML = "";
+    document.getElementById("scn-empty").style.display = "block";
+    return;
+  }
+  document.getElementById("scn-empty").style.display = "none";
+  list.innerHTML = state.scenarios.map(s => {
+    const tpl = SCN_TEMPLATES[s.template];
+    if (!tpl) return "";
+    const result = runScenario(s);
+    if (!result) return "";
+    const verdict = tpl.verdict(s.inputs, result.impact);
+    // Top goal impact
+    const worstGoal = result.goalImpacts.filter(gi => gi.diff > 0).sort((a,b) => b.diff - a.diff)[0];
+    const bestGoal = result.goalImpacts.filter(gi => gi.diff < 0).sort((a,b) => a.diff - b.diff)[0];
+    const goalLine = worstGoal ? `<span class="pill orange">${worstGoal.goal.name} +${worstGoal.diff}m</span>` : bestGoal ? `<span class="pill green">${bestGoal.goal.name} ${bestGoal.diff}m</span>` : "";
+    return `<div class="scn-row" onclick="openScenarioDetail(${s.id})">
+      <div class="scn-icon">${tpl.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="scn-name">${s.name} <span class="pill gray" style="margin-left:6px;">${tpl.name}</span></div>
+        <div class="scn-verdict">${verdict} · NW@5y ${result.nwDelta5y >= 0 ? "+" : ""}${fmtShort(result.nwDelta5y)}</div>
+        <div style="margin-top:6px;">${goalLine}</div>
+      </div>
+      <button class="btn ghost sm" onclick="event.stopPropagation();deleteScenario(${s.id})">✕</button>
+    </div>`;
+  }).join("");
+}
+function newScenarioTemplate(tplKey) {
+  const tpl = SCN_TEMPLATES[tplKey];
+  if (!tpl) return;
+  const inputs = {};
+  tpl.fields.forEach(f => inputs[f.id] = f.def);
+  const scn = { id: Date.now(), name: tpl.name, template: tplKey, inputs, created_at: todayISO() };
+  state.scenarios.push(scn);
+  saveState();
+  if (document.getElementById("sec-strategy").classList.contains("active")) renderStrategy();
+  else go("strategy");
+  setTimeout(() => openScenarioDetail(scn.id), 100);
+}
+function deleteScenario(id) {
+  if (!confirm("¿Eliminar escenario?")) return;
+  state.scenarios = state.scenarios.filter(s => s.id !== id);
+  saveState();
+  renderStrategy();
+}
+function openScenarioDetail(id) {
+  const scn = state.scenarios.find(s => s.id === id);
+  if (!scn) return;
+  const tpl = SCN_TEMPLATES[scn.template];
+  const result = runScenario(scn);
+  const fields = tpl.fields.map(f => `
+    <div class="field">
+      <label>${f.label}</label>
+      <input type="number" data-scn-input="${f.id}" value="${scn.inputs[f.id]}" step="any" onchange="updateScenarioInput(${id},'${f.id}',this.value)">
+    </div>
+  `).join("");
+  const goalRows = result.goalImpacts.map(gi => {
+    let pill, txt;
+    if (gi.diff === null) { pill = "gray"; txt = "no calculable"; }
+    else if (gi.diff === 999) { pill = "red"; txt = "no alcanzable"; }
+    else if (gi.diff > 0) { pill = "orange"; txt = `+${gi.diff} meses`; }
+    else if (gi.diff < 0) { pill = "green"; txt = `${gi.diff} meses`; }
+    else { pill = "blue"; txt = "sin impacto"; }
+    return `<div class="impact-row">
+      <span class="lbl-row">${gi.goal.name}</span>
+      <span class="val muted-2">${gi.baseMonth != null ? "m+" + gi.baseMonth : "—"} → ${gi.scnMonth != null ? "m+" + gi.scnMonth : "—"}</span>
+      <span class="pill ${pill}">${txt}</span>
+    </div>`;
+  }).join("");
+  const body = `
+    <div style="margin-bottom:18px;">
+      <input type="text" value="${scn.name.replace(/"/g,'&quot;')}" onchange="renameScenario(${id},this.value)" style="font-size:16px;font-weight:600;border:none;background:none;padding:0;letter-spacing:-0.02em;">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+      ${fields}
+    </div>
+
+    <div class="label" style="margin-bottom:10px;">Impacto inmediato</div>
+    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+      <div class="impact-row"><span class="lbl-row">Cash inmediato</span><span class="val">${fmtShort(result.liquidityNow)}</span><span class="muted-2" style="font-size:11px;">era ${fmtShort(result.liquidityBase)}</span></div>
+      <div class="impact-row"><span class="lbl-row">Flujo libre mensual</span><span class="val">${fmtShort(result.freeFlow)}</span><span class="muted-2" style="font-size:11px;">era ${fmtShort(result.freeFlowBase)}</span></div>
+      <div class="impact-row"><span class="lbl-row">Leverage</span><span class="val">${fmtPct(result.leverageNow)}</span><span class="muted-2" style="font-size:11px;">era ${fmtPct(result.leverageBase)}</span></div>
+    </div>
+
+    <div class="label" style="margin-bottom:10px;">Impacto a 5 años</div>
+    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+      <div class="impact-row"><span class="lbl-row">Patrimonio proyectado</span><span class="val">${fmtShort(result.nw5y)}</span><span class="muted-2" style="font-size:11px;">${result.nwDelta5y >= 0 ? "+" : ""}${fmtShort(result.nwDelta5y)} vs base</span></div>
+    </div>
+
+    <div class="label" style="margin-bottom:10px;">Impacto en goals</div>
+    ${state.goals.length ? `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:12px 14px;">${goalRows}</div>` : '<div class="empty">Creá goals para ver este análisis</div>'}
+  `;
+  openDrawer(tpl.name, "Escenario · " + scn.name, body, { readonly: true });
+  document.getElementById("dr-foot").style.display = "none";
+}
+function updateScenarioInput(id, field, val) {
+  const scn = state.scenarios.find(s => s.id === id);
+  if (!scn) return;
+  scn.inputs[field] = parseFloat(val) || 0;
+  saveState();
+  openScenarioDetail(id);
+  renderStrategy();
+}
+function renameScenario(id, name) {
+  const scn = state.scenarios.find(s => s.id === id);
+  if (!scn) return;
+  scn.name = name;
+  saveState();
+  renderStrategy();
+}
+
+/* ============ BUSINESS ============ */
+function renderBusiness() {
+  const active = state.businesses.filter(b => b.status === "active");
+  const rev = active.reduce((s, b) => s + b.monthly_revenue, 0);
+  const cost = active.reduce((s, b) => s + b.monthly_costs, 0);
+  const contrib = rev - cost;
+  document.getElementById("bz-contrib").textContent = fmtShort(contrib);
+  document.getElementById("bz-summary").innerHTML = `<span class="num">${active.length}</span> activos · ingreso <span class="num">${fmtShort(rev)}</span> · costos <span class="num">${fmtShort(cost)}</span>`;
+  const tbody = document.querySelector("#bz-tbl tbody");
+  tbody.innerHTML = state.businesses.map(b => {
+    const m = b.monthly_revenue - b.monthly_costs;
+    const mp = b.monthly_revenue > 0 ? m / b.monthly_revenue * 100 : 0;
+    return `<tr class="row" onclick="openBzForm(${b.id})">
+      <td><strong>${b.name}</strong><div style="font-size:11px;color:var(--text3);">Desde ${b.started_date || "—"}</div></td>
+      <td><span class="pill ${b.status==='active'?'green':'gray'}">${b.status}</span></td>
+      <td class="r">${fmtShort(b.monthly_revenue)}</td>
+      <td class="r">${fmtShort(b.monthly_costs)}</td>
+      <td class="r ${m>=0?'pos':'neg'}">${fmtShort(m)}</td>
+      <td class="r">${fmtPct(mp)}</td>
+    </tr>`;
+  }).join("");
+  document.getElementById("bz-empty").style.display = state.businesses.length ? "none" : "block";
+}
+
+/* ============ GOALS ============ */
+function renderGoals() {
+  const grid = document.getElementById("goals-grid");
+  if (!state.goals.length) {
+    grid.innerHTML = "";
+    document.getElementById("goals-empty").style.display = "block";
+    return;
+  }
+  document.getElementById("goals-empty").style.display = "none";
+  grid.innerHTML = state.goals.map(g => {
+    const st = goalStatus(g);
+    const prog = Math.min(1, Math.max(0, goalCurrentProgress(g)));
+    const cur = goalCurrentValue(g);
+    const statusEl = st.status === "completed" ? '<span class="pill green">completado</span>'
+                   : st.status === "ahead" ? `<span class="pill green">${fmtMonths(Math.abs(st.monthsDiff))} adelantado</span>`
+                   : st.status === "on_track" ? '<span class="pill blue">on track</span>'
+                   : st.status === "behind" ? `<span class="pill orange">${fmtMonths(st.monthsDiff)} atrasado</span>`
+                   : '<span class="pill red">at risk</span>';
+    const barColor = prog >= 1 ? "green" : st.status === "ahead" || st.status === "on_track" ? "" : st.status === "behind" ? "orange" : "red";
+    const typeLabels = { net_worth: "Patrimonio", invested_capital: "Capital invertido", asset_down: "Pie para activo", passive_income: "Ingreso pasivo/mes" };
+    return `<div class="goal-card" onclick="openGoalDetail(${g.id})">
+      <div class="gtitle">${g.name}</div>
+      <div class="gsub">${typeLabels[g.type]} · target ${g.target_date}</div>
+      <div class="gnum">
+        <div class="now">${fmtShort(cur)}</div>
+        <div class="tgt">/ ${fmtShort(g.target_value)}</div>
+      </div>
+      <div class="goal-bar"><div class="fill ${barColor}" style="width:${(prog*100).toFixed(1)}%;"></div></div>
+      <div class="gstatus"><span class="muted-2 num">${(prog*100).toFixed(0)}% completado</span>${statusEl}</div>
+    </div>`;
+  }).join("");
+}
+function openGoalDetail(id) {
+  const g = state.goals.find(x => x.id === id);
+  if (!g) return;
+  const st = goalStatus(g);
+  const cur = goalCurrentValue(g);
+  const prog = Math.min(1, Math.max(0, goalCurrentProgress(g)));
+  const relatedScenarios = state.scenarios.filter(s => {
+    const r = runScenario(s);
+    return r && r.goalImpacts.some(gi => gi.goal.id === g.id && gi.diff !== null && gi.diff !== 0);
+  });
+  const scnList = relatedScenarios.map(s => {
+    const r = runScenario(s);
+    const gi = r.goalImpacts.find(x => x.goal.id === g.id);
+    const cls = gi.diff > 0 ? "orange" : "green";
+    return `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px;border-bottom:0.5px solid var(--border);cursor:pointer;" onclick="closeDrawer();openScenarioDetail(${s.id});">
+      <span>${SCN_TEMPLATES[s.template]?.icon || "◆"} ${s.name}</span>
+      <span class="pill ${cls}">${gi.diff > 0 ? "+" : ""}${gi.diff}m</span>
+    </div>`;
+  }).join("");
+  const typeLabels = { net_worth: "Patrimonio neto", invested_capital: "Capital invertido", asset_down: "Pie disponible", passive_income: "Ingreso pasivo mensual" };
+  const body = `
+    <div class="field"><label>Nombre</label><input type="text" id="gd-name" value="${g.name.replace(/"/g,'&quot;')}"></div>
+    <div class="field-row">
+      <div class="field"><label>Tipo</label><select id="gd-type">
+        <option value="net_worth" ${g.type==='net_worth'?'selected':''}>Patrimonio neto</option>
+        <option value="invested_capital" ${g.type==='invested_capital'?'selected':''}>Capital invertido</option>
+        <option value="asset_down" ${g.type==='asset_down'?'selected':''}>Pie para activo</option>
+        <option value="passive_income" ${g.type==='passive_income'?'selected':''}>Ingreso pasivo/mes</option>
+      </select></div>
+      <div class="field"><label>Target (CLP)</label><input type="number" id="gd-target" value="${g.target_value}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Target date</label><input type="date" id="gd-date" value="${g.target_date}"></div>
+      <div class="field" style="display:flex;align-items:flex-end;"><button class="btn danger" onclick="deleteGoal(${g.id})">Eliminar</button></div>
+    </div>
+
+    <div class="label" style="margin-top:16px;margin-bottom:8px;">Estado actual</div>
+    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12.5px;">
+      <div style="display:flex;justify-content:space-between;padding:5px 0;"><span class="muted">Tipo</span><span>${typeLabels[g.type]}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;"><span class="muted">Progreso actual</span><span class="num">${fmtShort(cur)} / ${fmtShort(g.target_value)} (${(prog*100).toFixed(0)}%)</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;"><span class="muted">Meses a target</span><span class="num">${monthsBetween(todayISO(), g.target_date)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;"><span class="muted">Proyección actual</span><span class="num">${st.monthsToTarget != null ? "alcanzado en m+" + st.monthsToTarget : "no alcanzable"}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;"><span class="muted">Status</span><span>${st.status === "completed" ? '<span class="pill green">completado</span>' : st.status === "ahead" ? `<span class="pill green">${Math.abs(st.monthsDiff)}m adelantado</span>` : st.status === "on_track" ? '<span class="pill blue">on track</span>' : st.status === "behind" ? `<span class="pill orange">${st.monthsDiff}m atrasado</span>` : '<span class="pill red">at risk</span>'}</span></div>
+    </div>
+
+    ${relatedScenarios.length ? `<div class="label" style="margin-top:16px;margin-bottom:8px;">Escenarios que afectan este goal</div>${scnList}` : ""}
+  `;
+  openDrawer("Goal", g.name, body, {
+    onSave: () => {
+      g.name = document.getElementById("gd-name").value.trim();
+      g.type = document.getElementById("gd-type").value;
+      g.target_value = parseFloat(document.getElementById("gd-target").value) || g.target_value;
+      g.target_date = document.getElementById("gd-date").value;
+      saveState();
+      closeDrawer();
+      renderGoals();
+      toast("Goal actualizado", "green");
+    }
+  });
+}
+function deleteGoal(id) {
+  if (!confirm("¿Eliminar este goal?")) return;
+  state.goals = state.goals.filter(g => g.id !== id);
+  saveState();
+  closeDrawer();
+  renderGoals();
+  toast("Goal eliminado");
+}
+function openGoalForm() {
+  const body = `
+    <div class="field"><label>Nombre</label><input type="text" id="gd-name" placeholder="Ej: Segundo departamento"></div>
+    <div class="field-row">
+      <div class="field"><label>Tipo</label><select id="gd-type">
+        <option value="net_worth">Patrimonio neto</option>
+        <option value="invested_capital">Capital invertido</option>
+        <option value="asset_down">Pie para activo</option>
+        <option value="passive_income">Ingreso pasivo/mes</option>
+      </select></div>
+      <div class="field"><label>Target (CLP)</label><input type="number" id="gd-target" placeholder="100000000"></div>
+    </div>
+    <div class="field"><label>Target date</label><input type="date" id="gd-date" value="${todayISO()}"></div>
+    <p class="sub" style="margin-top:8px;">Asset down: monto en CLP que necesitás como pie. Passive income: ingreso mensual objetivo en CLP.</p>
+  `;
+  openDrawer("Nuevo goal", "Decisiones se comparan contra esto", body, {
+    onSave: () => {
+      const name = document.getElementById("gd-name").value.trim();
+      if (!name) { toast("Nombre requerido", "red"); return; }
+      state.goals.push({
+        id: Date.now(), name,
+        type: document.getElementById("gd-type").value,
+        target_value: parseFloat(document.getElementById("gd-target").value) || 0,
+        target_date: document.getElementById("gd-date").value,
+        notes: "",
+      });
+      saveState();
+      closeDrawer();
+      go("goals");
+      toast("Goal creado", "green");
+    }
+  });
+}
+
+/* ============ FORMS: ACCOUNT, TX, INV, PROPERTY, BZ ============ */
+function openAccForm(id) {
+  const a = id ? state.accounts.find(x => x.id === id) : null;
+  const body = `
+    <div class="field-row">
+      <div class="field"><label>Nombre</label><input type="text" id="af-name" value="${a?a.name.replace(/"/g,'&quot;'):''}"></div>
+      <div class="field"><label>Banco</label><input type="text" id="af-bank" value="${a?(a.bank||'').replace(/"/g,'&quot;'):''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Tipo</label><select id="af-type">
+        <option value="checking" ${a&&a.type==='checking'?'selected':''}>Corriente</option>
+        <option value="savings"  ${a&&a.type==='savings'?'selected':''}>Ahorro</option>
+        <option value="credit"   ${a&&a.type==='credit'?'selected':''}>Tarjeta crédito</option>
+        <option value="cash"     ${a&&a.type==='cash'?'selected':''}>Cash / Vista</option>
+      </select></div>
+      <div class="field"><label>Moneda</label><select id="af-cur">
+        <option value="CLP" ${a&&a.currency==='CLP'?'selected':''}>CLP</option>
+        <option value="USD" ${a&&a.currency==='USD'?'selected':''}>USD</option>
+      </select></div>
+    </div>
+    <div class="field"><label>Saldo (negativo para TC con deuda)</label><input type="number" id="af-bal" value="${a?a.balance:0}" step="1000"></div>
+    ${a ? `<div style="margin-top:10px;"><button class="btn danger" onclick="deleteAccount(${a.id})">Eliminar cuenta</button></div>` : ''}
+  `;
+  openDrawer(a ? "Editar cuenta" : "Nueva cuenta", a ? a.name : "", body, {
+    onSave: () => {
+      const obj = {
+        id: a ? a.id : Date.now(),
+        name: document.getElementById("af-name").value.trim(),
+        bank: document.getElementById("af-bank").value.trim(),
+        type: document.getElementById("af-type").value,
+        currency: document.getElementById("af-cur").value,
+        balance: parseFloat(document.getElementById("af-bal").value) || 0,
+      };
+      if (!obj.name) { toast("Nombre requerido", "red"); return; }
+      if (a) { const i = state.accounts.findIndex(x => x.id === a.id); state.accounts[i] = obj; }
+      else state.accounts.push(obj);
+      saveState(); closeDrawer(); renderCashflow(); renderDashboard(); toast("Cuenta guardada", "green");
+    }
+  });
+}
+function deleteAccount(id) {
+  if (!confirm("¿Eliminar cuenta? Los movimientos quedarán huérfanos.")) return;
+  state.accounts = state.accounts.filter(a => a.id !== id);
+  saveState(); closeDrawer(); renderCashflow();
+}
+function openTxForm(id) {
+  const t = id ? state.transactions.find(x => x.id === id) : null;
+  const accOpts = state.accounts.map(a => `<option value="${a.id}" ${t&&t.account_id===a.id?'selected':''}>${a.name}</option>`).join("");
+  const cats = [...new Set(state.transactions.map(t => t.category).filter(Boolean))].sort();
+  const catOpts = cats.map(c => `<option>${c}</option>`).join("");
+  const body = `
+    <div class="field-row">
+      <div class="field"><label>Fecha</label><input type="date" id="tf-date" value="${t?t.date:todayISO()}"></div>
+      <div class="field"><label>Cuenta</label><select id="tf-acc">${accOpts}</select></div>
+    </div>
+    <div class="field"><label>Descripción</label><input type="text" id="tf-desc" value="${t?t.description.replace(/"/g,'&quot;'):''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Monto (negativo = gasto)</label><input type="number" id="tf-amt" value="${t?t.amount:''}" step="1"></div>
+      <div class="field"><label>Moneda</label><select id="tf-cur">
+        <option value="CLP" ${t&&t.currency==='CLP'?'selected':''}>CLP</option>
+        <option value="USD" ${t&&t.currency==='USD'?'selected':''}>USD</option>
+        <option value="UF" ${t&&t.currency==='UF'?'selected':''}>UF</option>
+      </select></div>
+    </div>
+    <div class="field"><label>Categoría</label><input list="cat-list" id="tf-cat" value="${t?(t.category||''):''}"><datalist id="cat-list">${catOpts}</datalist></div>
+    ${t?`<div style="margin-top:10px;"><button class="btn danger" onclick="deleteTx(${t.id})">Eliminar</button></div>`:''}
+  `;
+  openDrawer(t ? "Editar movimiento" : "Nuevo movimiento", "", body, {
+    onSave: () => {
+      const obj = {
+        id: t ? t.id : Date.now(),
+        date: document.getElementById("tf-date").value,
+        account_id: parseInt(document.getElementById("tf-acc").value),
+        description: document.getElementById("tf-desc").value.trim(),
+        amount: parseFloat(document.getElementById("tf-amt").value) || 0,
+        currency: document.getElementById("tf-cur").value,
+        category: document.getElementById("tf-cat").value.trim() || "Sin categoría",
+      };
+      if (!obj.date) { toast("Fecha requerida", "red"); return; }
+      if (t) { const i = state.transactions.findIndex(x => x.id === t.id); state.transactions[i] = obj; }
+      else state.transactions.push(obj);
+      saveState(); closeDrawer(); renderCashflow(); renderDashboard(); toast("Movimiento guardado", "green");
+    }
+  });
+}
+function deleteTx(id) {
+  state.transactions = state.transactions.filter(t => t.id !== id);
+  saveState(); closeDrawer(); renderCashflow(); renderDashboard();
+}
+function openInvForm(id) {
+  const i = id ? state.investments.find(x => x.id === id) : null;
+  const body = `
+    <div class="field-row">
+      <div class="field"><label>Ticker</label><input type="text" id="if-ticker" value="${i?i.ticker:''}"></div>
+      <div class="field"><label>Tipo</label><select id="if-type">
+        <option value="etf" ${i&&i.type==='etf'?'selected':''}>ETF</option>
+        <option value="stock" ${i&&i.type==='stock'?'selected':''}>Acción</option>
+        <option value="mutual_fund" ${i&&i.type==='mutual_fund'?'selected':''}>Fondo Mutuo</option>
+        <option value="crypto" ${i&&i.type==='crypto'?'selected':''}>Crypto</option>
+        <option value="bond" ${i&&i.type==='bond'?'selected':''}>Bono</option>
+      </select></div>
+    </div>
+    <div class="field"><label>Nombre</label><input type="text" id="if-name" value="${i?(i.name||''):''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Cantidad</label><input type="number" id="if-qty" value="${i?i.quantity:''}" step="0.0001"></div>
+      <div class="field"><label>Costo promedio</label><input type="number" id="if-cost" value="${i?i.avg_cost:''}" step="0.01"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Precio actual</label><input type="number" id="if-price" value="${i?i.current_price:''}" step="0.01"></div>
+      <div class="field"><label>Moneda</label><select id="if-cur">
+        <option value="USD" ${i&&i.currency==='USD'?'selected':''}>USD</option>
+        <option value="CLP" ${i&&i.currency==='CLP'?'selected':''}>CLP</option>
+        <option value="UF" ${i&&i.currency==='UF'?'selected':''}>UF</option>
+      </select></div>
+    </div>
+    <div class="field"><label>Broker</label><input type="text" id="if-broker" value="${i?(i.broker||''):''}"></div>
+    ${i?`<div style="margin-top:10px;"><button class="btn danger" onclick="deleteInv(${i.id})">Eliminar</button></div>`:''}
+  `;
+  openDrawer(i ? "Editar inversión" : "Nueva inversión", "", body, {
+    onSave: () => {
+      const obj = {
+        id: i ? i.id : Date.now(),
+        ticker: document.getElementById("if-ticker").value.trim().toUpperCase(),
+        type: document.getElementById("if-type").value,
+        name: document.getElementById("if-name").value.trim(),
+        quantity: parseFloat(document.getElementById("if-qty").value) || 0,
+        avg_cost: parseFloat(document.getElementById("if-cost").value) || 0,
+        current_price: parseFloat(document.getElementById("if-price").value) || 0,
+        currency: document.getElementById("if-cur").value,
+        broker: document.getElementById("if-broker").value.trim(),
+      };
+      if (!obj.ticker) { toast("Ticker requerido", "red"); return; }
+      if (i) { const idx = state.investments.findIndex(x => x.id === i.id); state.investments[idx] = obj; }
+      else state.investments.push(obj);
+      saveState(); closeDrawer(); renderPortfolio(); renderDashboard(); toast("Inversión guardada", "green");
+    }
+  });
+}
+function deleteInv(id) {
+  state.investments = state.investments.filter(i => i.id !== id);
+  saveState(); closeDrawer(); renderPortfolio(); renderDashboard();
+}
+function openPropertyForm(id) {
+  const p = id ? state.properties.find(x => x.id === id) : null;
+  const body = `
+    <div class="field"><label>Nombre</label><input type="text" id="pf-name" value="${p?p.name:''}"></div>
+    <div class="field"><label>Dirección</label><input type="text" id="pf-addr" value="${p?(p.address||''):''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Status</label><select id="pf-status">
+        <option value="primary" ${p&&p.status==='primary'?'selected':''}>Vivienda principal</option>
+        <option value="rental"  ${p&&p.status==='rental'?'selected':''}>Arriendo</option>
+        <option value="empty"   ${p&&p.status==='empty'?'selected':''}>Sin uso</option>
+      </select></div>
+      <div class="field"><label>Fecha compra</label><input type="date" id="pf-date" value="${p?p.purchase_date:''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Valor compra (UF)</label><input type="number" id="pf-puf" value="${p?p.purchase_value_uf:''}" step="10"></div>
+      <div class="field"><label>Valor actual (UF)</label><input type="number" id="pf-cuf" value="${p?p.current_value_uf:''}" step="10"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Pie (CLP)</label><input type="number" id="pf-down" value="${p?p.downpayment_clp:''}" step="500000"></div>
+      <div class="field"><label>Capital hipoteca (UF)</label><input type="number" id="pf-pri" value="${p?p.mortgage_principal_uf:''}" step="10"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Tasa % anual</label><input type="number" id="pf-rate" value="${p?p.mortgage_rate:4.5}" step="0.1"></div>
+      <div class="field"><label>Plazo años</label><input type="number" id="pf-yrs" value="${p?p.mortgage_years:25}" min="5" max="30"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Inicio hipoteca</label><input type="date" id="pf-mstart" value="${p?p.mortgage_start:''}"></div>
+      <div class="field"><label>Dividendo (UF)</label><input type="number" id="pf-pay" value="${p?p.monthly_payment_uf:''}" step="0.1"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Arriendo CLP/mes</label><input type="number" id="pf-rent" value="${p?(p.monthly_rent_clp||0):0}" step="10000"></div>
+      <div class="field"><label>Gastos CLP/mes</label><input type="number" id="pf-exp" value="${p?(p.monthly_expenses_clp||0):0}" step="5000"></div>
+    </div>
+    ${p?`<div style="margin-top:10px;"><button class="btn danger" onclick="deleteProperty(${p.id})">Eliminar propiedad</button></div>`:''}
+  `;
+  openDrawer(p ? "Editar propiedad" : "Nueva propiedad", "", body, {
+    onSave: () => {
+      const obj = {
+        id: p ? p.id : Date.now(),
+        name: document.getElementById("pf-name").value.trim(),
+        address: document.getElementById("pf-addr").value.trim(),
+        status: document.getElementById("pf-status").value,
+        purchase_date: document.getElementById("pf-date").value,
+        purchase_value_uf: parseFloat(document.getElementById("pf-puf").value) || 0,
+        current_value_uf: parseFloat(document.getElementById("pf-cuf").value) || 0,
+        downpayment_clp: parseFloat(document.getElementById("pf-down").value) || 0,
+        mortgage_principal_uf: parseFloat(document.getElementById("pf-pri").value) || 0,
+        mortgage_rate: parseFloat(document.getElementById("pf-rate").value) || 0,
+        mortgage_years: parseInt(document.getElementById("pf-yrs").value) || 25,
+        mortgage_start: document.getElementById("pf-mstart").value,
+        monthly_payment_uf: parseFloat(document.getElementById("pf-pay").value) || 0,
+        monthly_rent_clp: parseFloat(document.getElementById("pf-rent").value) || 0,
+        monthly_expenses_clp: parseFloat(document.getElementById("pf-exp").value) || 0,
+      };
+      if (!obj.name) { toast("Nombre requerido", "red"); return; }
+      if (p) { const idx = state.properties.findIndex(x => x.id === p.id); state.properties[idx] = obj; }
+      else state.properties.push(obj);
+      saveState(); closeDrawer(); renderPortfolio(); renderDashboard(); toast("Propiedad guardada", "green");
+    }
+  });
+}
+function deleteProperty(id) {
+  state.properties = state.properties.filter(p => p.id !== id);
+  saveState(); closeDrawer(); renderPortfolio(); renderDashboard();
+}
+function openBzForm(id) {
+  const b = id ? state.businesses.find(x => x.id === id) : null;
+  const body = `
+    <div class="field"><label>Nombre</label><input type="text" id="bf-name" value="${b?b.name:''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Inicio</label><input type="date" id="bf-start" value="${b?b.started_date:todayISO()}"></div>
+      <div class="field"><label>Status</label><select id="bf-status">
+        <option value="active" ${b&&b.status==='active'?'selected':''}>Activo</option>
+        <option value="paused" ${b&&b.status==='paused'?'selected':''}>Pausado</option>
+      </select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Ingreso/mes</label><input type="number" id="bf-rev" value="${b?b.monthly_revenue:0}" step="50000"></div>
+      <div class="field"><label>Costos/mes</label><input type="number" id="bf-cost" value="${b?b.monthly_costs:0}" step="10000"></div>
+    </div>
+    ${b?`<div style="margin-top:10px;"><button class="btn danger" onclick="deleteBz(${b.id})">Eliminar</button></div>`:''}
+  `;
+  openDrawer(b ? "Editar negocio" : "Nuevo negocio", "", body, {
+    onSave: () => {
+      const obj = {
+        id: b ? b.id : Date.now(),
+        name: document.getElementById("bf-name").value.trim(),
+        started_date: document.getElementById("bf-start").value,
+        status: document.getElementById("bf-status").value,
+        monthly_revenue: parseFloat(document.getElementById("bf-rev").value) || 0,
+        monthly_costs: parseFloat(document.getElementById("bf-cost").value) || 0,
+      };
+      if (!obj.name) { toast("Nombre requerido", "red"); return; }
+      if (b) { const idx = state.businesses.findIndex(x => x.id === b.id); state.businesses[idx] = obj; }
+      else state.businesses.push(obj);
+      saveState(); closeDrawer(); renderBusiness(); toast("Negocio guardado", "green");
+    }
+  });
+}
+function deleteBz(id) {
+  state.businesses = state.businesses.filter(b => b.id !== id);
+  saveState(); closeDrawer(); renderBusiness();
+}
+
+function openRatesForm() {
+  const body = `
+    <div class="field-row">
+      <div class="field"><label>UF (CLP)</label><input type="number" id="rf-uf" value="${state.settings.uf}" step="1"></div>
+      <div class="field"><label>USD (CLP)</label><input type="number" id="rf-usd" value="${state.settings.usd}" step="1"></div>
+    </div>
+    <p class="sub">Oficial: <a href="https://www.sii.cl/valores_y_fechas/uf/uf2026.htm" target="_blank">sii.cl</a> · <a href="https://www.bcentral.cl/" target="_blank">bcentral.cl</a></p>
+  `;
+  openDrawer("Tipos de cambio", "Actualización manual", body, {
+    onSave: () => {
+      state.settings.uf = parseFloat(document.getElementById("rf-uf").value) || state.settings.uf;
+      state.settings.usd = parseFloat(document.getElementById("rf-usd").value) || state.settings.usd;
+      saveState(); closeDrawer(); updateSidebar(); renderDashboard(); toast("Tasas actualizadas", "green");
+    }
+  });
+}
+
+/* ============ CSV IMPORT ============ */
+function importCSV(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = function(e) {
+    try {
+      const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) throw new Error("CSV vacío");
+      const header = lines[0].toLowerCase().split(/[,;]/).map(s => s.trim().replace(/"/g, ""));
+      const iDate = header.findIndex(h => /fecha|date/.test(h));
+      const iDesc = header.findIndex(h => /desc|glos|detalle/.test(h));
+      const iAmt = header.findIndex(h => /monto|amount|cargo|abono/.test(h));
+      const iCat = header.findIndex(h => /categor|tipo/.test(h));
+      if (iDate < 0 || iDesc < 0 || iAmt < 0) throw new Error("Necesita columnas fecha, descripción, monto");
+      const acc = state.accounts[0]?.id || 1;
+      let added = 0;
+      for (let k = 1; k < lines.length; k++) {
+        const c = lines[k].split(/[,;]/).map(s => s.trim().replace(/"/g, ""));
+        const date = c[iDate]; const desc = c[iDesc]; const amt = parseFloat(c[iAmt].replace(/\./g, "").replace(",", "."));
+        if (!date || isNaN(amt)) continue;
+        const dt = date.length === 10 ? date : date.split("/").reverse().join("-");
+        state.transactions.push({
+          id: Date.now() + k, date: dt, account_id: acc,
+          description: desc, amount: amt, currency: "CLP",
+          category: (iCat >= 0 ? c[iCat] : "") || autoCategorize(desc),
+        });
+        added++;
+      }
+      saveState(); renderCashflow(); renderDashboard();
+      toast(`${added} movimientos importados ✓`, "green");
+    } catch (err) { toast("Error: " + err.message, "red"); }
+    ev.target.value = "";
+  };
+  r.readAsText(file);
+}
+function autoCategorize(desc) {
+  const d = (desc || "").toLowerCase();
+  if (/jumbo|lider|tottus|santa isabel|unimarc/.test(d)) return "Supermercado";
+  if (/uber|cabify|didi|taxi|metro|transantiago|bip/.test(d)) return "Transporte";
+  if (/netflix|spotify|hbo|disney|prime|paramount/.test(d)) return "Suscripciones";
+  if (/gym|smart fit|sportlife/.test(d)) return "Gimnasio";
+  if (/salario|sueldo|nomina/.test(d)) return "Salario";
+  if (/farmacia|cruz verde|salcobrand|consulta/.test(d)) return "Salud";
+  if (/restaurant|cafe|bar|sushi|burger/.test(d)) return "Restaurantes";
+  return "Sin categoría";
+}
+
+/* ============ EXPORT / IMPORT JSON ============ */
+function exportData() {
+  const payload = { version: 2, exportedAt: new Date().toISOString(), state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "wealth-os-backup-" + todayISO() + ".json";
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+  toast("Backup descargado", "green");
+}
+function importData() {
+  document.getElementById("import-file-hidden").click();
+}
+function importDataFile(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.state) throw new Error("formato inválido");
+      if (!confirm("Esto reemplaza tus datos actuales. ¿Continuar?")) { ev.target.value = ""; return; }
+      state = data.state;
+      saveState(); updateSidebar(); go("dashboard"); toast("Datos importados", "green");
+    } catch (err) { toast("Archivo inválido: " + err.message, "red"); }
+    ev.target.value = "";
+  };
+  r.readAsText(file);
+}
+function loadDemo() {
+  if (!confirm("Cargar set de datos demo (reemplaza los actuales)?")) return;
+  state = demoState(); saveState(); updateSidebar(); go("dashboard"); toast("Datos demo cargados", "green");
+}
+function clearAll() {
+  if (!confirm("¿Borrar TODOS los datos? No reversible.")) return;
+  if (!confirm("Última confirmación.")) return;
+  localStorage.removeItem(LS_KEY);
+  state = emptyState(); saveState(); updateSidebar(); go("dashboard"); toast("Datos borrados", "red");
+}
+
+/* ============ SIDEBAR / INIT ============ */
+function updateSidebar() {
+  document.getElementById("sb-uf").textContent = "$" + NF.format(state.settings.uf);
+  document.getElementById("sb-usd").textContent = "$" + NF.format(state.settings.usd);
+}
+
+/* ============ KEYBOARD ============ */
+document.addEventListener("keydown", (e) => {
+  // Cmd-K / Ctrl-K
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault(); openCmdK(); return;
+  }
+  // Number 1-6 for section nav (when not in input)
+  const target = e.target;
+  const inField = ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+  if (!inField && /^[1-6]$/.test(e.key)) {
+    e.preventDefault();
+    const ids = ["dashboard","cashflow","portfolio","strategy","business","goals"];
+    go(ids[parseInt(e.key) - 1]);
+    return;
+  }
+  // / for search
+  if (!inField && e.key === "/") {
+    e.preventDefault();
+    if (document.getElementById("sec-cashflow").classList.contains("active")) {
+      document.getElementById("tx-q").focus();
+    }
+    return;
+  }
+  // Escape closes cmd-k and drawer
+  if (e.key === "Escape") {
+    if (document.getElementById("cmdk-bg").classList.contains("open")) closeCmdK();
+    else if (document.getElementById("drawer").classList.contains("open")) closeDrawer();
+  }
+  // Cmd-k navigation
+  if (document.getElementById("cmdk-bg").classList.contains("open")) {
+    if (e.key === "ArrowDown") { e.preventDefault(); cmdkIndex = Math.min(cmdkVisible.length - 1, cmdkIndex + 1); cmdkRender(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); cmdkIndex = Math.max(0, cmdkIndex - 1); cmdkRender(); }
+    else if (e.key === "Enter") { e.preventDefault(); cmdkRun(cmdkIndex); }
+  }
+});
+
+/* ============ DRAG&DROP CSV ============ */
+let dragCounter = 0;
+document.addEventListener("dragenter", e => {
+  e.preventDefault();
+  if (e.dataTransfer.types.includes("Files")) {
+    dragCounter++;
+    document.getElementById("drag-overlay").classList.add("show");
+  }
+});
+document.addEventListener("dragleave", e => {
+  dragCounter--;
+  if (dragCounter <= 0) { dragCounter = 0; document.getElementById("drag-overlay").classList.remove("show"); }
+});
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0;
+  document.getElementById("drag-overlay").classList.remove("show");
+  const files = e.dataTransfer.files;
+  if (files.length && files[0].name.toLowerCase().endsWith(".csv")) {
+    const fakeEvent = { target: { files, value: "" } };
+    importCSV(fakeEvent);
+  }
+});
+
+/* ============ INIT ============ */
+function init() {
+  loadState();
+  // Hidden file input for import
+  if (!document.getElementById("import-file-hidden")) {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.id = "import-file-hidden"; inp.accept = "application/json,.json"; inp.style.display = "none";
+    inp.onchange = importDataFile;
+    document.body.appendChild(inp);
+  }
+  updateSidebar();
+  go("dashboard");
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+}
+
+init();
+</script>
+
+</body>
+</html>
