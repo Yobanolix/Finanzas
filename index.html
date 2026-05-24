@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#08090b">
-<title>Wealth OS v0.5</title>
+<title>Wealth OS v0.6</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root {
@@ -176,6 +176,41 @@ input[type="checkbox"] { width: auto; min-height: 0; height: 16px; width: 16px; 
 .confirm h3 { font-size: 14px; }
 .confirm p { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
 .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+/* Advanced disclosure */
+.advanced-toggle { grid-column: span 2; padding-top: 4px; }
+.advanced-toggle button { padding: 6px 0; background: none; border: 0; color: var(--accent); font-size: 12px; cursor: pointer; }
+.advanced-toggle button:hover { color: var(--text); }
+.advanced-section { grid-column: span 2; padding: 12px 14px; background: rgba(255,255,255,0.015); border: 0.5px dashed var(--line); border-radius: 8px; display: none; }
+.advanced-section.open { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.advanced-section .span-2 { grid-column: span 2; }
+
+/* TC ciclo */
+.tc-card { padding: 14px 16px; border: 0.5px solid var(--line); border-radius: 8px; background: var(--panel); display: grid; gap: 10px; }
+.tc-card .tc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tc-card .tc-name { font-size: 13.5px; font-weight: 620; }
+.tc-card .tc-meta { font-size: 11.5px; color: var(--muted); }
+.tc-bar { height: 8px; background: #090b0f; border: 0.5px solid var(--line); border-radius: 999px; overflow: hidden; position: relative; }
+.tc-bar span { position: absolute; inset: 0 auto 0 0; width: var(--w, 0%); max-width: 100%; background: var(--accent); border-radius: inherit; }
+.tc-bar.warn span { background: var(--amber); }
+.tc-bar.bad span { background: var(--red); }
+.tc-bar.good span { background: var(--green); }
+.tc-detail { font-size: 12px; color: var(--soft); display: grid; gap: 4px; }
+.tc-detail .tc-row { display: flex; justify-content: space-between; }
+.tc-cycle-list { display: grid; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--line); }
+.tc-mov-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--line); font-size: 12px; cursor: pointer; }
+.tc-mov-row:last-child { border-bottom: 0; }
+.tc-mov-row .tc-mov-date { color: var(--faint); font-size: 11px; min-width: 60px; }
+.tc-mov-row .tc-mov-concept { flex: 1; }
+.tc-mov-row .tc-mov-amount { color: var(--red); font-variant-numeric: tabular-nums; }
+.tc-mov-empty { padding: 16px; text-align: center; color: var(--faint); font-size: 12px; }
+
+/* Phases */
+.phase-card { border: 0.5px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.phase-card h4 { color: var(--text); }
+.phase-card.phase-1 { border-left: 2px solid var(--amber); }
+.phase-card.phase-2 { border-left: 2px solid var(--accent); }
+.phase-meta { font-size: 11px; color: var(--faint); margin-top: 2px; margin-bottom: 8px; }
+
 @media (max-width: 1060px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { position: static; height: auto; padding: 12px; border-right: 0; border-bottom: 0.5px solid var(--line); }
@@ -203,7 +238,7 @@ input[type="checkbox"] { width: auto; min-height: 0; height: 16px; width: 16px; 
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-mark">W</div>
-      <div class="brand-title">Wealth OS <span>v0.5 personal capital</span></div>
+      <div class="brand-title">Wealth OS <span>v0.6 personal capital</span></div>
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="side-card" id="sideCard"></div>
@@ -274,10 +309,11 @@ input[type="checkbox"] { width: auto; min-height: 0; height: 16px; width: 16px; 
    Decision Lab y Venture Lab quedan como v0.3 funcional.
    ============================================================ */
 
-const STORE_KEY = "wealth_os_v05";
+const STORE_KEY = "wealth_os_v06";
+const STORE_KEY_V05 = "wealth_os_v05";
 const STORE_KEY_V04 = "wealth_os_v04";
 const STORE_KEY_V03 = "wealth_os_v03";
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 /* ============ CONSTANTS ============ */
 const ASSET_CLASSES = {
@@ -373,6 +409,13 @@ function demoState() {
     ],
     liabilities: [
       { id: "l-mortgage", name: "Hipotecario Ñuñoa", type: "mortgage", currency: "UF", balance: 2700, annualRate: 0.045, yearsLeft: 24, monthlyPayment: 15.8, notes: "" },
+      { id: "l-tc-santander", name: "TC Santander", type: "credit_card", currency: "CLP", balance: 720000, annualRate: 0.0, yearsLeft: 0, monthlyPayment: 0, notes: "", creditLimit: 3000000, cutoffDay: 5 },
+    ],
+    tcMovements: [
+      { id: "tcm-1", liability_id: "l-tc-santander", date: new Date(Date.now() - 12 * 86400000).toISOString().slice(0,10), amount: 145000, concept: "Supermercado Jumbo" },
+      { id: "tcm-2", liability_id: "l-tc-santander", date: new Date(Date.now() - 8 * 86400000).toISOString().slice(0,10),  amount: 89000,  concept: "Restorán cena viernes" },
+      { id: "tcm-3", liability_id: "l-tc-santander", date: new Date(Date.now() - 5 * 86400000).toISOString().slice(0,10),  amount: 220000, concept: "Compra técnica" },
+      { id: "tcm-4", liability_id: "l-tc-santander", date: new Date(Date.now() - 2 * 86400000).toISOString().slice(0,10),  amount: 64000,  concept: "Bencina + Uber" },
     ],
     businesses: [
       {
@@ -419,14 +462,14 @@ function emptyState() {
   const s = demoState();
   return {
     ...s,
-    assets: [], liabilities: [], businesses: [], goals: [], decisions: [],
+    assets: [], liabilities: [], businesses: [], goals: [], decisions: [], tcMovements: [],
     cashflow: { income: [], expenses: [] },
   };
 }
 
 function ensureIds(state) {
   // Defensive: cualquier entidad sin id, le ponemos uno
-  const arrs = ["assets", "liabilities", "goals", "businesses", "decisions"];
+  const arrs = ["assets", "liabilities", "goals", "businesses", "decisions", "tcMovements"];
   arrs.forEach(k => (state[k] || []).forEach(e => { if (!e.id) e.id = uid(k.slice(0, 3)); }));
   (state.cashflow?.income  || []).forEach(e => { if (!e.id) e.id = uid("inc"); });
   (state.cashflow?.expenses|| []).forEach(e => { if (!e.id) e.id = uid("exp"); });
@@ -471,12 +514,35 @@ function migrateFromV03(v03) {
 
 let state = null;
 
+function migrateFromV05(v05) {
+  // v0.5 → v0.6: agrega creditLimit/cutoffDay a TC liabilities, pieEnCuotas a property decisions, tcMovements: []
+  const out = JSON.parse(JSON.stringify(v05 || {}));
+  out.schemaVersion = SCHEMA_VERSION;
+  // TC liabilities
+  (out.liabilities || []).forEach(l => {
+    if (l.type === "credit_card") {
+      if (l.creditLimit == null) l.creditLimit = null;
+      if (l.cutoffDay == null) l.cutoffDay = null;
+    }
+  });
+  // tcMovements
+  if (!Array.isArray(out.tcMovements)) out.tcMovements = [];
+  // property decisions
+  (out.decisions || []).forEach(d => {
+    if (d.template === "property_residential" || d.template === "property_investment") {
+      if (d.inputs.pieEnCuotas == null) d.inputs.pieEnCuotas = false;
+      if (d.inputs.cuotasMeses == null) d.inputs.cuotasMeses = 24;
+    }
+  });
+  return ensureIds(out);
+}
+
 function migrateFromV04(v04) {
-  // v0.4 → v0.5: solo agrega decisions: [] si no existe
+  // v0.4 → v0.5: agrega decisions: []
   const out = JSON.parse(JSON.stringify(v04 || {}));
   out.schemaVersion = SCHEMA_VERSION;
   if (!Array.isArray(out.decisions)) out.decisions = [];
-  return ensureIds(out);
+  return migrateFromV05(out);
 }
 
 function loadState() {
@@ -486,8 +552,16 @@ function loadState() {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.schemaVersion === SCHEMA_VERSION) {
         state = ensureIds(parsed);
-        return { migrated: false, source: "v05" };
+        return { migrated: false, source: "v06" };
       }
+    }
+    // Try v0.5
+    const v05raw = localStorage.getItem(STORE_KEY_V05);
+    if (v05raw) {
+      const v05 = JSON.parse(v05raw);
+      state = migrateFromV05(v05);
+      saveState();
+      return { migrated: true, source: "v05" };
     }
     // Try v0.4
     const v04raw = localStorage.getItem(STORE_KEY_V04);
@@ -503,6 +577,7 @@ function loadState() {
       const v03 = JSON.parse(v03raw);
       state = migrateFromV03(v03);
       if (!Array.isArray(state.decisions)) state.decisions = [];
+      if (!Array.isArray(state.tcMovements)) state.tcMovements = [];
       saveState();
       return { migrated: true, source: "v03" };
     }
@@ -520,6 +595,84 @@ function loadState() {
 function saveState() {
   state.schemaVersion = SCHEMA_VERSION;
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+
+
+/* ============================================================
+   SMART DEFAULTS por clase de activo y plantilla de decisión
+   ============================================================ */
+const ASSET_DEFAULTS = {
+  cash:        { annualReturn: 0.00, liquidity: "immediate",   risk: "low",    monthlyIncome: 0 },
+  fund:        { annualReturn: 0.05, liquidity: "two_days",    risk: "low",    monthlyIncome: 0 },
+  etf:         { annualReturn: 0.07, liquidity: "two_days",    risk: "high",   monthlyIncome: 0 },
+  stock:       { annualReturn: 0.08, liquidity: "two_days",    risk: "high",   monthlyIncome: 0 },
+  apv:         { annualReturn: 0.06, liquidity: "locked",      risk: "high",   monthlyIncome: 0 },
+  deposit:     { annualReturn: 0.05, liquidity: "thirty_days", risk: "low",    monthlyIncome: 0 },
+  real_estate: { annualReturn: 0.03, liquidity: "locked",      risk: "medium", monthlyIncome: 0 },
+  crypto:      { annualReturn: 0.10, liquidity: "two_days",    risk: "high",   monthlyIncome: 0 },
+  business:    { annualReturn: 0.00, liquidity: "locked",      risk: "high",   monthlyIncome: 0 },
+  private:     { annualReturn: 0.00, liquidity: "locked",      risk: "medium", monthlyIncome: 0 },
+  other:       { annualReturn: 0.00, liquidity: "immediate",   risk: "low",    monthlyIncome: 0 },
+};
+
+function assetReturnEff(a) {
+  if (a.annualReturn != null && !isNaN(a.annualReturn) && a.annualReturn !== "") return Number(a.annualReturn);
+  return (ASSET_DEFAULTS[a.class] || ASSET_DEFAULTS.other).annualReturn;
+}
+function assetLiquidityEff(a) {
+  if (a.liquidity) return a.liquidity;
+  return (ASSET_DEFAULTS[a.class] || ASSET_DEFAULTS.other).liquidity;
+}
+function assetRiskEff(a) {
+  if (a.risk) return a.risk;
+  return (ASSET_DEFAULTS[a.class] || ASSET_DEFAULTS.other).risk;
+}
+
+/* ============================================================
+   TC CICLO helper — basado en liability type=credit_card
+   ============================================================ */
+function getTCs() {
+  return (state.liabilities || []).filter(l => l.type === "credit_card");
+}
+
+function tcCycleRange(cutoffDay) {
+  // Returns { start: Date, end: Date }
+  const today = new Date();
+  const d = cutoffDay || 1;
+  let start;
+  if (today.getDate() > d) {
+    // Cycle started this month at cutoff day + 1
+    start = new Date(today.getFullYear(), today.getMonth(), d + 1);
+  } else {
+    // Cycle started last month at cutoff day + 1
+    start = new Date(today.getFullYear(), today.getMonth() - 1, d + 1);
+  }
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + 1);
+  end.setDate(end.getDate() - 1);
+  return { start, end };
+}
+
+function tcCycleData(liability) {
+  const movs = (state.tcMovements || []).filter(m => m.liability_id === liability.id);
+  if (!liability.cutoffDay) {
+    return {
+      cutoffDay: null, cycleStart: null, cycleEnd: null,
+      cycleCharges: [], cycleTotal: 0,
+      daysToCutoff: null,
+      utilization: liability.creditLimit ? Math.min(1, (liability.balance || 0) / liability.creditLimit) : null,
+    };
+  }
+  const { start, end } = tcCycleRange(liability.cutoffDay);
+  const cycleCharges = movs.filter(m => {
+    const dt = new Date(m.date);
+    return dt >= start && dt <= end;
+  }).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const cycleTotal = cycleCharges.reduce((s, m) => s + (m.amount || 0), 0);
+  const today = new Date();
+  const daysToCutoff = Math.max(0, Math.ceil((end.getTime() - today.getTime()) / 86400000));
+  const utilization = liability.creditLimit ? Math.min(1, cycleTotal / liability.creditLimit) : null;
+  return { cutoffDay: liability.cutoffDay, cycleStart: start, cycleEnd: end, cycleCharges, cycleTotal, daysToCutoff, utilization };
 }
 
 /* ============ FORMATTERS ============ */
@@ -575,20 +728,26 @@ function toCLP(amount, currency) {
 /* ============ CALCULATIONS ============ */
 
 function calcCapital() {
-  const assetsCLP = (state.assets || []).map(a => ({ ...a, valueCLP: toCLP(a.value || 0, a.currency) }));
+  const assetsCLP = (state.assets || []).map(a => ({
+    ...a,
+    valueCLP: toCLP(a.value || 0, a.currency),
+    _liquidity: assetLiquidityEff(a),
+    _risk: assetRiskEff(a),
+    _annualReturn: assetReturnEff(a),
+  }));
   const grossAssets = assetsCLP.reduce((s, a) => s + a.valueCLP, 0);
   const liabCLP = (state.liabilities || []).map(l => ({ ...l, balanceCLP: toCLP(l.balance || 0, l.currency) }));
   const totalDebt = liabCLP.reduce((s, l) => s + l.balanceCLP, 0);
   const netWorth = grossAssets - totalDebt;
 
-  // Liquidity: pondera valor por weight de liquidity
+  // Liquidity: pondera valor por weight de liquidity (usa efectivo)
   const liquidityValue = assetsCLP.reduce((s, a) => {
-    const w = LIQUIDITY[a.liquidity || "immediate"]?.weight ?? 1.0;
+    const w = LIQUIDITY[a._liquidity]?.weight ?? 1.0;
     return s + a.valueCLP * w;
   }, 0);
   // Liquidez "inmediata + 2d" (sin penalty)
   const fastLiquidValue = assetsCLP
-    .filter(a => a.liquidity === "immediate" || a.liquidity === "two_days")
+    .filter(a => a._liquidity === "immediate" || a._liquidity === "two_days")
     .reduce((s, a) => s + a.valueCLP, 0);
 
   // Por clase
@@ -603,10 +762,10 @@ function calcCapital() {
   const usdExposure = byCurrency.USD || 0;
   // Líquido vs ilíquido
   const liquidValue = assetsCLP
-    .filter(a => a.liquidity === "immediate" || a.liquidity === "two_days" || a.liquidity === "thirty_days")
+    .filter(a => a._liquidity === "immediate" || a._liquidity === "two_days" || a._liquidity === "thirty_days")
     .reduce((s, a) => s + a.valueCLP, 0);
   const illiquidValue = assetsCLP
-    .filter(a => a.liquidity === "locked")
+    .filter(a => a._liquidity === "locked")
     .reduce((s, a) => s + a.valueCLP, 0);
 
   // Income from assets (passive)
@@ -742,33 +901,43 @@ function fCheckbox(name, label, value) {
 }
 function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 
+
+function fAdvancedOpen() {
+  return `<div class="advanced-toggle"><button type="button" data-action="toggle-advanced">Mostrar detalle avanzado ↓</button></div><div class="advanced-section">`;
+}
+function fAdvancedClose() { return `</div>`; }
+
 const ENTITY = {
   asset: {
     label: "Activo",
     arrayPath: "assets",
-    defaults: () => ({ id: uid("a"), name: "", class: "cash", currency: "CLP", value: 0, costBasis: null, annualReturn: 0, monthlyIncome: 0, liquidity: "immediate", risk: "low", notes: "" }),
+    defaults: () => ({ id: uid("a"), name: "", class: "cash", currency: "CLP", value: 0, costBasis: null, annualReturn: null, monthlyIncome: 0, liquidity: "", risk: "", notes: "" }),
     form(item) {
       return `
         ${fInput("name", "Nombre", item.name, { placeholder: "Ej: Caja BCI", span2: true })}
         ${fSelect("class", "Clase", item.class, Object.entries(ASSET_CLASSES).map(([v, c]) => ({ value: v, label: c.label })))}
         ${fSelect("currency", "Moneda", item.currency, CURRENCIES.map(c => ({ value: c, label: c })))}
         ${fInput("value", "Valor actual", item.value, { type: "number", step: "0.01" })}
-        ${fInput("costBasis", "Costo / base invertida", item.costBasis, { type: "number", step: "0.01", hint: "Opcional, en la misma moneda" })}
-        ${fInput("annualReturn", "Rentabilidad anual esperada", item.annualReturn, { type: "number", step: "0.001", hint: "Decimal (0.07 = 7%)" })}
-        ${fInput("monthlyIncome", "Ingreso mensual", item.monthlyIncome, { type: "number", step: "0.01", hint: "Arriendo, dividendos, cupones (en moneda del activo)" })}
-        ${fSelect("liquidity", "Liquidez", item.liquidity, Object.entries(LIQUIDITY).map(([v, c]) => ({ value: v, label: c.label })))}
-        ${fSelect("risk", "Riesgo", item.risk, Object.entries(RISK).map(([v, c]) => ({ value: v, label: c.label })))}
+        ${fAdvancedOpen()}
+        ${fInput("costBasis", "Costo / base invertida", item.costBasis, { type: "number", step: "0.01", hint: "Opcional. Si vacío no se calcula P/L" })}
+        ${fInput("annualReturn", "Rentabilidad anual", item.annualReturn, { type: "number", step: "0.001", hint: "Decimal (0.07 = 7%). Si vacío usa default por clase" })}
+        ${fInput("monthlyIncome", "Ingreso mensual", item.monthlyIncome, { type: "number", step: "0.01", hint: "Arriendo, dividendos, cupones — moneda del activo" })}
+        ${fSelect("liquidity", "Liquidez", item.liquidity, [{value:"",label:"(usar default por clase)"}].concat(Object.entries(LIQUIDITY).map(([v, c]) => ({ value: v, label: c.label }))))}
+        ${fSelect("risk", "Riesgo", item.risk, [{value:"",label:"(usar default por clase)"}].concat(Object.entries(RISK).map(([v, c]) => ({ value: v, label: c.label }))))}
         ${fTextarea("notes", "Notas", item.notes)}
+        ${fAdvancedClose()}
       `;
     },
     parse(form) {
       const o = {};
-      ["name", "class", "currency", "liquidity", "risk", "notes"].forEach(k => o[k] = form[k] || "");
-      ["value", "costBasis", "annualReturn", "monthlyIncome"].forEach(k => {
-        const v = form[k];
-        o[k] = v === "" || v == null ? (k === "costBasis" ? null : 0) : Number(v);
-        if (isNaN(o[k])) o[k] = (k === "costBasis" ? null : 0);
-      });
+      ["name", "class", "currency", "notes"].forEach(k => o[k] = form[k] || "");
+      o.liquidity = form.liquidity || "";
+      o.risk = form.risk || "";
+      // Numeric: blanks mean "use default" (annualReturn) or 0 / null
+      const valV = form.value; o.value = valV === "" || valV == null ? 0 : Number(valV); if (isNaN(o.value)) o.value = 0;
+      const cbV = form.costBasis; o.costBasis = cbV === "" || cbV == null ? null : Number(cbV); if (o.costBasis != null && isNaN(o.costBasis)) o.costBasis = null;
+      const arV = form.annualReturn; o.annualReturn = arV === "" || arV == null ? null : Number(arV); if (o.annualReturn != null && isNaN(o.annualReturn)) o.annualReturn = null;
+      const miV = form.monthlyIncome; o.monthlyIncome = miV === "" || miV == null ? 0 : Number(miV); if (isNaN(o.monthlyIncome)) o.monthlyIncome = 0;
       return o;
     },
     validate(o) {
@@ -782,22 +951,37 @@ const ENTITY = {
   liability: {
     label: "Deuda",
     arrayPath: "liabilities",
-    defaults: () => ({ id: uid("l"), name: "", type: "consumer", currency: "CLP", balance: 0, annualRate: 0, yearsLeft: 1, monthlyPayment: 0, notes: "" }),
+    defaults: () => ({ id: uid("l"), name: "", type: "consumer", currency: "CLP", balance: 0, monthlyPayment: 0, annualRate: 0, yearsLeft: 1, notes: "", creditLimit: null, cutoffDay: null }),
     form(item) {
+      const isTC = item.type === "credit_card";
       return `
         ${fInput("name", "Nombre", item.name, { placeholder: "Ej: Hipotecario Ñuñoa", span2: true })}
         ${fSelect("type", "Tipo", item.type, Object.entries(LIABILITY_TYPES).map(([v, c]) => ({ value: v, label: c.label })))}
         ${fSelect("currency", "Moneda", item.currency, CURRENCIES.map(c => ({ value: c, label: c })))}
         ${fInput("balance", "Saldo pendiente", item.balance, { type: "number", step: "0.01" })}
+        ${fInput("monthlyPayment", "Cuota / Pago mensual", item.monthlyPayment, { type: "number", step: "0.01", hint: "En moneda de la deuda" })}
+        ${isTC ? `
+          ${fInput("creditLimit", "Cupo TC (CLP)", item.creditLimit, { type: "number", step: "1", hint: "Línea de crédito total" })}
+          ${fInput("cutoffDay", "Día de corte", item.cutoffDay, { type: "number", step: "1", min: 1, max: 31, hint: "Día del mes en que cierra el ciclo" })}
+        ` : ""}
+        ${fAdvancedOpen()}
         ${fInput("annualRate", "Tasa anual", item.annualRate, { type: "number", step: "0.001", hint: "Decimal (0.045 = 4.5%)" })}
         ${fInput("yearsLeft", "Años restantes", item.yearsLeft, { type: "number", step: "0.5", min: 0 })}
-        ${fInput("monthlyPayment", "Cuota mensual", item.monthlyPayment, { type: "number", step: "0.01", hint: "En moneda de la deuda" })}
         ${fTextarea("notes", "Notas", item.notes)}
+        ${fAdvancedClose()}
       `;
     },
     parse(form) {
       const o = { name: (form.name || "").trim(), type: form.type || "other", currency: form.currency || "CLP", notes: form.notes || "" };
       ["balance", "annualRate", "yearsLeft", "monthlyPayment"].forEach(k => { const v = Number(form[k]); o[k] = isNaN(v) ? 0 : v; });
+      // TC fields (solo si type=credit_card)
+      if (o.type === "credit_card") {
+        const cl = form.creditLimit; o.creditLimit = cl === "" || cl == null ? null : Number(cl); if (o.creditLimit != null && isNaN(o.creditLimit)) o.creditLimit = null;
+        const cd = form.cutoffDay;   o.cutoffDay   = cd === "" || cd == null ? null : Number(cd); if (o.cutoffDay   != null && isNaN(o.cutoffDay))   o.cutoffDay   = null;
+      } else {
+        o.creditLimit = null;
+        o.cutoffDay = null;
+      }
       return o;
     },
     validate(o) {
@@ -867,10 +1051,12 @@ const ENTITY = {
         ${fInput("name", "Nombre", item.name, { placeholder: "Ej: Pie segundo depto", span2: true })}
         ${fSelect("type", "Tipo", item.type, Object.entries(GOAL_TYPES).map(([v, c]) => ({ value: v, label: c.label })))}
         ${fInput("target", "Monto objetivo (CLP)", item.target, { type: "number", step: "1" })}
-        ${fInput("monthlyAlloc", "Aporte mensual asignado (CLP)", item.monthlyAlloc, { type: "number", step: "1", hint: "Cuánto destinás cada mes" })}
-        ${fInput("annualReturn", "Retorno anual esperado", item.annualReturn, { type: "number", step: "0.001", hint: "Decimal (0.07 = 7%)" })}
+        ${fAdvancedOpen()}
+        ${fInput("monthlyAlloc", "Aporte mensual asignado (CLP)", item.monthlyAlloc, { type: "number", step: "1", hint: "Cuánto destinás cada mes — afecta la proyección" })}
+        ${fInput("annualReturn", "Retorno anual esperado", item.annualReturn, { type: "number", step: "0.001", hint: "Decimal (0.07 = 7%). Default 5%" })}
         ${fInput("targetDate", "Fecha objetivo (opcional)", item.targetDate, { type: "date" })}
         ${fTextarea("notes", "Notas", item.notes)}
+        ${fAdvancedClose()}
       `;
     },
     parse(form) {
@@ -879,7 +1065,7 @@ const ENTITY = {
         type: form.type || "net_worth",
         target: Number(form.target) || 0,
         monthlyAlloc: Number(form.monthlyAlloc) || 0,
-        annualReturn: Number(form.annualReturn) || 0,
+        annualReturn: form.annualReturn === "" ? 0.05 : (Number(form.annualReturn) || 0),
         targetDate: form.targetDate || "",
         notes: form.notes || "",
       };
@@ -1011,6 +1197,31 @@ const ENTITY = {
       return null;
     },
   },
+  tcMovement: {
+    label: "Movimiento TC",
+    parentEntity: "liability",
+    parentField: "__tcMovements__", // marker — actually goes into state.tcMovements
+    defaults: () => ({ id: uid("tcm"), liability_id: null, date: new Date().toISOString().slice(0,10), amount: 0, concept: "" }),
+    form(item) {
+      return `
+        ${fInput("date", "Fecha", item.date, { type: "date" })}
+        ${fInput("amount", "Monto (CLP)", item.amount, { type: "number", step: "1", hint: "Sin signo" })}
+        ${fInput("concept", "Concepto", item.concept, { placeholder: "Ej: Supermercado Jumbo", span2: true })}
+      `;
+    },
+    parse(form) {
+      return {
+        date: form.date || new Date().toISOString().slice(0,10),
+        amount: Math.abs(Number(form.amount) || 0),
+        concept: (form.concept || "").trim(),
+      };
+    },
+    validate(o) {
+      if (o.amount <= 0) return "Monto debe ser > 0";
+      if (!o.concept) return "Concepto requerido";
+      return null;
+    },
+  },
 };
 
 /* Path helpers para top-level array entities */
@@ -1027,6 +1238,11 @@ function getEntityArray(entityType) {
 function getNestedArray(entityType, parentId) {
   const def = ENTITY[entityType];
   if (!def || !def.parentEntity) return null;
+  // Special case: tcMovement lives in state.tcMovements, not inside the liability
+  if (entityType === "tcMovement") {
+    if (!Array.isArray(state.tcMovements)) state.tcMovements = [];
+    return state.tcMovements;
+  }
   const parentArr = getEntityArray(def.parentEntity);
   const parent = parentArr.find(p => p.id === parentId);
   if (!parent) return null;
@@ -1084,6 +1300,10 @@ function saveEntityForm() {
   if (err) { toast(err, "bad"); return; }
   const arr = def.parentEntity ? getNestedArray(crudCtx.entityType, crudCtx.parentId) : getEntityArray(crudCtx.entityType);
   if (!arr) { toast("Contenedor no encontrado", "bad"); return; }
+  // tcMovement needs liability_id
+  if (crudCtx.entityType === "tcMovement") {
+    parsed.liability_id = crudCtx.parentId;
+  }
   if (crudCtx.isNew) {
     arr.push({ id: crudCtx.id, ...parsed });
   } else {
@@ -1230,7 +1450,37 @@ function renderToday(root) {
       <div class="panel-header"><div><h3>Metas activas</h3><p class="panel-sub">Click en cualquiera para editarla.</p></div><button class="btn sm" type="button" data-action="goto-goals">Ver todas</button></div>
       <div class="grid cols-2">${renderGoalCards(state.goals || [])}</div>
     </div>
+    ${renderTCWidget()}
   `;
+}
+
+function renderTCWidget() {
+  const tcs = getTCs().filter(l => l.creditLimit && l.cutoffDay);
+  if (!tcs.length) return "";
+  const cards = tcs.map(tc => {
+    const cd = tcCycleData(tc);
+    const pct = cd.utilization != null ? cd.utilization * 100 : 0;
+    const barClass = pct >= 80 ? "bad" : pct >= 50 ? "warn" : pct >= 30 ? "warn" : "good";
+    if (pct < 30) return ""; // si está bajo 30%, no llenamos el dashboard con esto
+    return `
+      <div class="tc-card">
+        <div class="tc-head">
+          <div>
+            <div class="tc-name">${esc(tc.name)}</div>
+            <div class="tc-meta">Ciclo cierra en ${cd.daysToCutoff} día${cd.daysToCutoff === 1 ? "" : "s"} (día ${tc.cutoffDay})</div>
+          </div>
+          <span class="badge ${barClass}">${pct.toFixed(0)}% del cupo</span>
+        </div>
+        <div class="tc-bar ${barClass}"><span style="--w:${pct}%"></span></div>
+        <div class="tc-detail">
+          <div class="tc-row"><span class="muted">Consumido este ciclo</span><strong class="num">${fmtShort(cd.cycleTotal)}</strong></div>
+          <div class="tc-row"><span class="muted">Cupo</span><strong class="num">${fmtShort(tc.creditLimit)}</strong></div>
+        </div>
+      </div>
+    `;
+  }).filter(Boolean).join("");
+  if (!cards) return "";
+  return `<div class="panel"><div class="panel-header"><div><h3>Tarjetas — ojo con esto</h3><p class="panel-sub">TCs con utilización sobre 30% del cupo en el ciclo en curso.</p></div><button class="btn sm" type="button" data-action="goto-cashflow">Ver detalle</button></div><div class="grid cols-2">${cards}</div></div>`;
 }
 
 function renderGoalCards(goals) {
@@ -1410,7 +1660,58 @@ function renderCashflow(root) {
         <div class="row"><span class="muted">Pasivo / activos</span><strong class="num">${fmtPct(cap.grossAssets > 0 ? cap.totalDebt / cap.grossAssets : 0)}</strong></div>
       </div>
     </div>
+    ${renderTCSection()}
   `;
+}
+
+function renderTCSection() {
+  const tcs = getTCs();
+  if (!tcs.length) return `<div class="panel"><div class="panel-header"><div><h3>Tarjetas de crédito</h3><p class="panel-sub">No tenés TCs cargadas como liability. Agregá una en Capital → Deudas con tipo "Tarjeta crédito" para tener seguimiento de ciclo.</p></div></div></div>`;
+  const cards = tcs.map(tc => {
+    const cd = tcCycleData(tc);
+    if (!tc.creditLimit || !tc.cutoffDay) {
+      return `<div class="tc-card">
+        <div class="tc-head">
+          <div>
+            <div class="tc-name">${esc(tc.name)}</div>
+            <div class="tc-meta">Cupo y día de corte no configurados — <button class="btn sm ghost" type="button" data-action="edit-liability" data-id="${tc.id}">Configurar</button></div>
+          </div>
+        </div>
+      </div>`;
+    }
+    const pct = cd.utilization != null ? cd.utilization * 100 : 0;
+    const barClass = pct >= 80 ? "bad" : pct >= 50 ? "warn" : pct >= 30 ? "warn" : "good";
+    const movs = cd.cycleCharges;
+    const movsHtml = movs.length ? movs.map(m => `
+      <div class="tc-mov-row" data-action="edit-tcMovement" data-id="${m.id}" data-parent="${tc.id}">
+        <span class="tc-mov-date">${esc(m.date)}</span>
+        <span class="tc-mov-concept">${esc(m.concept)}</span>
+        <span class="tc-mov-amount">${fmtShort(m.amount)}</span>
+      </div>
+    `).join("") : `<div class="tc-mov-empty">Sin movimientos en este ciclo todavía.</div>`;
+    return `
+      <div class="tc-card">
+        <div class="tc-head">
+          <div>
+            <div class="tc-name">${esc(tc.name)}</div>
+            <div class="tc-meta">Cupo ${fmtShort(tc.creditLimit)} · Cierra día ${tc.cutoffDay} (en ${cd.daysToCutoff} día${cd.daysToCutoff === 1 ? "" : "s"})</div>
+          </div>
+          <button class="btn primary sm" type="button" data-action="new-tcMovement" data-parent="${tc.id}">+ Cargo</button>
+        </div>
+        <div class="tc-bar ${barClass}"><span style="--w:${pct}%"></span></div>
+        <div class="tc-detail">
+          <div class="tc-row"><span class="muted">Consumido este ciclo</span><strong class="num">${fmtShort(cd.cycleTotal)}</strong></div>
+          <div class="tc-row"><span class="muted">Utilización del cupo</span><strong class="num ${barClass}">${pct.toFixed(0)}%</strong></div>
+          <div class="tc-row"><span class="muted">Disponible</span><strong class="num">${fmtShort(Math.max(0, (tc.creditLimit || 0) - cd.cycleTotal))}</strong></div>
+        </div>
+        <div class="tc-cycle-list">
+          <h4 style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">Movimientos del ciclo (${movs.length})</h4>
+          ${movsHtml}
+        </div>
+      </div>
+    `;
+  }).join("");
+  return `<div class="panel"><div class="panel-header"><div><h3>Tarjetas de crédito — ciclo en curso</h3><p class="panel-sub">Registrá cargos para saber cuándo medirte. Cerrá el ciclo el día del corte; lo consumido se vuelve el monto a pagar.</p></div></div><div class="grid cols-2">${cards}</div></div>`;
 }
 
 /* ---------- GOALS ---------- */
@@ -1540,13 +1841,20 @@ function openDecision(templateKey, decisionId) {
   // Wire up live updates
   setTimeout(() => {
     document.querySelectorAll("[data-decision-input]").forEach(el => {
-      el.addEventListener("input", () => {
+      const evt = el.type === "checkbox" ? "change" : "input";
+      el.addEventListener(evt, () => {
         const id = el.dataset.decisionInput;
-        const raw = el.value;
         const f = tpl.fields.find(ff => ff.id === id);
-        if (f && f.type === "select") decisionDraft.inputs[id] = raw;
-        else decisionDraft.inputs[id] = Number(raw);
+        if (f && f.type === "select") decisionDraft.inputs[id] = el.value;
+        else if (f && f.type === "toggle") decisionDraft.inputs[id] = el.checked;
+        else decisionDraft.inputs[id] = Number(el.value);
         rerenderDecisionAnalysis();
+        // Si cambió pieEnCuotas, hay que regenerar el form porque cuotasMeses depende
+        if (id === "pieEnCuotas") {
+          document.getElementById("drawerBody").innerHTML = renderDecisionForm();
+          // re-wire listeners
+          setTimeout(() => openDecisionReWire(), 10);
+        }
       });
     });
     const nameEl = document.getElementById("decision-name");
@@ -1557,24 +1865,63 @@ function openDecision(templateKey, decisionId) {
   openDrawer();
 }
 
+function openDecisionReWire() {
+  const tpl = DECISION_TEMPLATES[decisionDraft.template];
+  document.querySelectorAll("[data-decision-input]").forEach(el => {
+    const evt = el.type === "checkbox" ? "change" : "input";
+    el.addEventListener(evt, () => {
+      const id = el.dataset.decisionInput;
+      const f = tpl.fields.find(ff => ff.id === id);
+      if (f && f.type === "select") decisionDraft.inputs[id] = el.value;
+      else if (f && f.type === "toggle") decisionDraft.inputs[id] = el.checked;
+      else decisionDraft.inputs[id] = Number(el.value);
+      rerenderDecisionAnalysis();
+      if (id === "pieEnCuotas") {
+        document.getElementById("drawerBody").innerHTML = renderDecisionForm();
+        setTimeout(() => openDecisionReWire(), 10);
+      }
+    });
+  });
+  const nameEl = document.getElementById("decision-name");
+  if (nameEl) nameEl.addEventListener("input", () => { decisionDraft.name = nameEl.value; });
+  const notesEl = document.getElementById("decision-notes");
+  if (notesEl) notesEl.addEventListener("input", () => { decisionDraft.notes = notesEl.value; });
+}
+
+function renderDecisionFieldHtml(f) {
+  const val = decisionDraft.inputs[f.id];
+  const hint = f.hint ? `<span class="field-hint">${esc(f.hint)}</span>` : "";
+  if (f.type === "select") {
+    const opts = (f.opts || []).map(o => `<option value="${esc(o.value)}" ${String(val) === String(o.value) ? "selected" : ""}>${esc(o.label)}</option>`).join("");
+    return `<label class="field">${esc(f.label)}${hint}<select data-decision-input="${esc(f.id)}">${opts}</select></label>`;
+  }
+  if (f.type === "toggle") {
+    return `<label class="field" style="grid-column: span 2;flex-direction: row;align-items:center;gap:10px;display:flex;">
+      <input type="checkbox" data-decision-input="${esc(f.id)}" ${val ? "checked" : ""}>
+      <span>${esc(f.label)}${hint}</span>
+    </label>`;
+  }
+  const step = f.step ? `step="${f.step}"` : "";
+  return `<label class="field">${esc(f.label)}${hint}<input type="number" data-decision-input="${esc(f.id)}" value="${val == null ? 0 : val}" ${step}></label>`;
+}
+
 function renderDecisionForm() {
   const tpl = DECISION_TEMPLATES[decisionDraft.template];
-  const fieldHtml = tpl.fields.map(f => {
-    const val = decisionDraft.inputs[f.id];
-    const hint = f.hint ? `<span class="field-hint">${esc(f.hint)}</span>` : "";
-    if (f.type === "select") {
-      const opts = (f.opts || []).map(o => `<option value="${esc(o.value)}" ${String(val) === String(o.value) ? "selected" : ""}>${esc(o.label)}</option>`).join("");
-      return `<label class="field">${esc(f.label)}${hint}<select data-decision-input="${esc(f.id)}">${opts}</select></label>`;
-    }
-    const step = f.step ? `step="${f.step}"` : "";
-    return `<label class="field">${esc(f.label)}${hint}<input type="number" data-decision-input="${esc(f.id)}" value="${val}" ${step}></label>`;
-  }).join("");
+  const essentialIds = DECISION_ESSENTIAL_FIELDS[decisionDraft.template] || tpl.fields.map(f => f.id);
+  const essentialFields = tpl.fields.filter(f => essentialIds.includes(f.id));
+  const advancedFields = tpl.fields.filter(f => !essentialIds.includes(f.id));
+  const essentialHtml = essentialFields.map(renderDecisionFieldHtml).join("");
+  const advancedHtml = advancedFields.map(renderDecisionFieldHtml).join("");
+  const advancedBlock = advancedFields.length ? `
+    <div class="advanced-toggle"><button type="button" data-action="toggle-advanced">Mostrar supuestos del modelo ↓</button></div>
+    <div class="advanced-section">${advancedHtml}</div>
+  ` : "";
   return `
     <div class="field" style="grid-column: span 2;">
       <label style="display:block;">Nombre <span class="field-hint">Para distinguir si guardás múltiples versiones</span></label>
       <input type="text" id="decision-name" value="${esc(decisionDraft.name)}" placeholder="Ej: Mazda 3 financiado a 48m">
     </div>
-    <div class="form-grid">${fieldHtml}</div>
+    <div class="form-grid">${essentialHtml}${advancedBlock}</div>
     <div class="field" style="grid-column: span 2;">
       <label>Notas (opcional)<span class="field-hint">Contexto, condiciones, lo que estás esperando</span></label>
       <textarea id="decision-notes" placeholder="Ej: Esperar bono Q2 antes de decidir...">${esc(decisionDraft.notes)}</textarea>
@@ -1593,6 +1940,35 @@ function renderDecisionAnalysis() {
   const deltas = tpl.compute(decisionDraft.inputs, state);
   const cap = calcCapital();
   const cf = calcCashflow();
+  // Si hay phases (pie en cuotas), renderizar ambas fases por separado y el resto basado en fase 1
+  let phasesHtml = "";
+  if (deltas.phases && deltas.phases.length === 2) {
+    phasesHtml = `
+      <div class="grid cols-2" style="margin-top:8px;">
+        ${deltas.phases.map((ph, idx) => {
+          const cashP = cap.fastLiquidValue + (ph.cashDelta || 0);
+          const flowP = cf.freeFlow + (ph.monthlyFlowDelta || 0);
+          const burnP = cf.burn + (ph.monthlyDebtAdded || 0);
+          const runwayP = burnP > 0 ? cashP / burnP : 99;
+          const debtP = cap.totalDebt + (ph.debtAdded || 0);
+          const dtiP = cf.income > 0 ? (cf.debtService + (ph.monthlyDebtAdded || 0)) / cf.income : 0;
+          const v = makeVerdict({ ...ph, cashDelta: ph.cashDelta, monthlyFlowDelta: ph.monthlyFlowDelta, monthlyDebtAdded: ph.monthlyDebtAdded, debtAdded: ph.debtAdded, assetAdded: ph.assetAdded }, state);
+          const vc = v.level === "viable" ? "good" : v.level === "wait" ? "warn" : "bad";
+          return `<div class="phase-card phase-${idx+1}">
+            <h4>${esc(ph.name)}</h4>
+            <div class="phase-meta">${ph.durationMonths ? "Dura " + ph.durationMonths + " meses" : "Desde escrituración en adelante"} · <span class="badge ${vc}">${esc(v.label)}</span></div>
+            <div class="row"><span class="muted">Cash inicial</span><strong class="num ${(ph.cashDelta || 0) < 0 ? "bad" : ""}">${fmtShort(ph.cashDelta || 0)}</strong></div>
+            <div class="row"><span class="muted">Δ flujo / mes</span><strong class="num ${(ph.monthlyFlowDelta || 0) < 0 ? "bad" : "good"}">${(ph.monthlyFlowDelta || 0) >= 0 ? "+" : ""}${fmtShort(ph.monthlyFlowDelta || 0)}</strong></div>
+            <div class="row"><span class="muted">Flujo libre post</span><strong class="num ${flowP < 0 ? "bad" : ""}">${fmtShort(flowP)}</strong></div>
+            <div class="row"><span class="muted">Runway post</span><strong class="num ${runwayP < 3 ? "bad" : ""}">${runwayP > 99 ? "99+" : runwayP.toFixed(1)}m</strong></div>
+            <div class="row"><span class="muted">Deuda agregada</span><strong class="num">${fmtShort(ph.debtAdded || 0)}</strong></div>
+            <div class="row"><span class="muted">DTI</span><strong class="num ${dtiP > 0.35 ? "bad" : ""}">${fmtPct(dtiP)}</strong></div>
+          </div>`;
+        }).join("")}
+      </div>
+      <p class="muted" style="font-size:11px;margin-top:8px;">Las fases se evalúan por separado. El veredicto principal abajo refleja la fase más exigente. La proyección no compone automáticamente (Modo A simplificado).</p>
+    `;
+  }
   const cashPost = cap.fastLiquidValue + (deltas.cashDelta || 0);
   const flowPost = cf.freeFlow + (deltas.monthlyFlowDelta || 0);
   const debtPost = cap.totalDebt + (deltas.debtAdded || 0);
@@ -1639,8 +2015,9 @@ function renderDecisionAnalysis() {
   const conditionsHtml = verdict.conditions.length ? `<div style="margin-top:10px;"><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:620;">Para que sea viable</div><ul style="margin:6px 0 0;padding-left:20px;font-size:12.5px;line-height:1.55;">${verdict.conditions.map(c => `<li>${esc(c)}</li>`).join("")}</ul></div>` : "";
 
   return `
+    ${phasesHtml}
     <div class="panel tight" style="margin-top:16px;">
-      <h4 style="color:var(--text);">Impacto inmediato</h4>
+      <h4 style="color:var(--text);">Impacto inmediato${deltas.phases ? " (basado en Fase 1)" : ""}</h4>
       <div class="row"><span class="muted">Caja inicial requerida</span><strong class="num ${(deltas.cashDelta || 0) < 0 ? "bad" : "good"}">${fmtShort(deltas.cashDelta || 0)}</strong></div>
       <div class="row"><span class="muted">Cash rápido post</span><strong class="num">${fmtShort(cashPost)} <span class="faint">(era ${fmtShort(cap.fastLiquidValue)})</span></strong></div>
       <div class="row"><span class="muted">Δ flujo libre / mes</span><strong class="num ${(deltas.monthlyFlowDelta || 0) < 0 ? "bad" : "good"}">${(deltas.monthlyFlowDelta || 0) >= 0 ? "+" : ""}${fmtShort(deltas.monthlyFlowDelta || 0)}</strong></div>
@@ -1952,6 +2329,8 @@ function paletteRun(i) {
 }
 
 
+const DECISION_ESSENTIAL_FIELDS = {"car": ["price", "downPayment"], "property_residential": ["priceUF", "downPct"], "property_investment": ["priceUF", "downPct", "monthlyRent"], "venture": ["initialCash", "monthlyBurn", "monthsToBreakeven", "profitAfterBreakeven"], "invest_more": ["extraMonthly", "annualReturn", "months"], "prepay": ["prepayAmount", "monthlyPayment"], "take_credit": ["amount", "purpose"], "job_change": ["newMonthlySalary", "currentMonthlySalary"]};
+
 const DECISION_TEMPLATES = {
   car: {
     key: "car",
@@ -2005,6 +2384,8 @@ const DECISION_TEMPLATES = {
       { id: "monthlyExpenses", label: "Gastos comunes + contribuciones (CLP/mes)", type: "number", def: 220000, step: 10000, hint: "" },
       { id: "closingPct",      label: "Costos compra",        type: "number", def: 0.04, step: 0.005, hint: "% del precio (notario, gastos)" },
       { id: "appreciation",    label: "Plusvalía anual",      type: "number", def: 0.035, step: 0.005, hint: "Decimal anual" },
+      { id: "pieEnCuotas",     label: "Pie en cuotas",        type: "toggle", def: false, hint: "Casa en blanco con cuotas mensuales del pie" },
+      { id: "cuotasMeses",     label: "Cuotas del pie",       type: "number", def: 24, step: 1, hint: "Meses hasta escrituración" },
     ],
     compute(i, st) {
       const uf = st.settings.uf || 39345;
@@ -2017,12 +2398,54 @@ const DECISION_TEMPLATES = {
       const monthlyUF = r > 0 ? principalUF * r / (1 - Math.pow(1 + r, -n)) : principalUF / n;
       const monthlyCLP = monthlyUF * uf;
       const monthlyTotal = monthlyCLP + (i.monthlyExpenses || 0);
+
+      if (i.pieEnCuotas && (i.cuotasMeses || 0) > 0) {
+        const cuotaPie = downCLP / (i.cuotasMeses || 1);
+        // Fase 1 (cuotas del pie pre-escrituración): cash sale en cuotas, no hay activo ni deuda todavía
+        const phase1 = {
+          name: "Fase 1 — Cuotas del pie",
+          durationMonths: i.cuotasMeses,
+          cashDelta: -cuotaPie, // primer impacto inmediato es solo la primera cuota
+          monthlyFlowDelta: -cuotaPie,
+          debtAdded: 0,
+          monthlyDebtAdded: 0,
+          assetAdded: 0,
+        };
+        // Fase 2 (post-escrituración): hipoteca arranca
+        const phase2 = {
+          name: "Fase 2 — Post escrituración",
+          durationMonths: null, // hasta el horizonte
+          cashDelta: -closingCLP,
+          monthlyFlowDelta: -monthlyTotal,
+          debtAdded: principalUF * uf,
+          monthlyDebtAdded: monthlyCLP,
+          assetAdded: priceCLP,
+        };
+        return {
+          // For headline numbers usar fase 1 (la más exigente probablemente)
+          cashDelta: phase1.cashDelta,
+          debtAdded: 0,
+          monthlyDebtAdded: 0,
+          monthlyFlowDelta: phase1.monthlyFlowDelta,
+          assetAdded: 0,
+          phases: [phase1, phase2],
+          explanations: {
+            "Pie total": downCLP,
+            "Cuota de pie / mes": cuotaPie,
+            "Meses de cuotas": i.cuotasMeses,
+            "Dividendo post-escrituración": monthlyCLP,
+            "Costos compra (al final)": closingCLP,
+            "Capital hipoteca (UF)": principalUF,
+          },
+        };
+      }
+
       return {
         cashDelta: -(downCLP + closingCLP),
         debtAdded: principalUF * uf,
         monthlyDebtAdded: monthlyCLP,
         monthlyFlowDelta: -monthlyTotal,
-        assetAdded: priceCLP, // se agrega como activo inmobiliario
+        assetAdded: priceCLP,
         explanations: {
           "Pie": downCLP,
           "Costos compra (notario etc.)": closingCLP,
@@ -2050,6 +2473,8 @@ const DECISION_TEMPLATES = {
       { id: "vacancyPct",       label: "Vacancia",            type: "number", def: 0.08, step: 0.01, hint: "Decimal (0.08 = 1 mes/año)" },
       { id: "closingPct",       label: "Costos compra",       type: "number", def: 0.04, step: 0.005, hint: "" },
       { id: "appreciation",     label: "Plusvalía anual",     type: "number", def: 0.035, step: 0.005, hint: "" },
+      { id: "pieEnCuotas",      label: "Pie en cuotas",       type: "toggle", def: false, hint: "Depto en blanco con cuotas mensuales del pie" },
+      { id: "cuotasMeses",      label: "Cuotas del pie",      type: "number", def: 24, step: 1, hint: "Meses hasta escrituración" },
     ],
     compute(i, st) {
       const uf = st.settings.uf || 39345;
@@ -2067,11 +2492,51 @@ const DECISION_TEMPLATES = {
       const annualNOI = (grossRent - (i.monthlyExpenses || 0)) * 12;
       const capRate = priceCLP > 0 ? annualNOI / priceCLP : 0;
       const cashOnCash = downCLP > 0 ? (cashFlow * 12) / downCLP : 0;
+
+      if (i.pieEnCuotas && (i.cuotasMeses || 0) > 0) {
+        const cuotaPie = downCLP / (i.cuotasMeses || 1);
+        const phase1 = {
+          name: "Fase 1 — Cuotas del pie",
+          durationMonths: i.cuotasMeses,
+          cashDelta: -cuotaPie,
+          monthlyFlowDelta: -cuotaPie,
+          debtAdded: 0,
+          monthlyDebtAdded: 0,
+          assetAdded: 0,
+        };
+        const phase2 = {
+          name: "Fase 2 — Post escrituración (con arriendo)",
+          durationMonths: null,
+          cashDelta: -closingCLP,
+          monthlyFlowDelta: cashFlow,
+          debtAdded: principalUF * uf,
+          monthlyDebtAdded: monthlyCLP,
+          assetAdded: priceCLP,
+        };
+        return {
+          cashDelta: phase1.cashDelta,
+          debtAdded: 0,
+          monthlyDebtAdded: 0,
+          monthlyFlowDelta: phase1.monthlyFlowDelta,
+          assetAdded: 0,
+          phases: [phase1, phase2],
+          explanations: {
+            "Pie total": downCLP,
+            "Cuota de pie / mes": cuotaPie,
+            "Meses de cuotas": i.cuotasMeses,
+            "Dividendo post-escrituración": monthlyCLP,
+            "Arriendo neto (post)": netRent,
+            "Cash flow neto post-escrituración": cashFlow,
+            "Cap Rate (anual, post)": capRate,
+          },
+        };
+      }
+
       return {
         cashDelta: -(downCLP + closingCLP),
         debtAdded: principalUF * uf,
         monthlyDebtAdded: monthlyCLP,
-        monthlyFlowDelta: cashFlow, // negativo si subsidia, positivo si genera caja
+        monthlyFlowDelta: cashFlow,
         assetAdded: priceCLP,
         explanations: {
           "Pie": downCLP,
@@ -2395,11 +2860,14 @@ function importFile(file) {
       confirmAction("Importar backup", "Esto reemplaza tus datos actuales. ¿Continuar?", () => {
         if (payload.schemaVersion === SCHEMA_VERSION) {
           state = ensureIds(payload);
+        } else if (payload.schemaVersion === 5) {
+          state = migrateFromV05(payload);
         } else if (payload.schemaVersion === 4) {
           state = migrateFromV04(payload);
         } else {
           state = migrateFromV03(payload);
           if (!Array.isArray(state.decisions)) state.decisions = [];
+          if (!Array.isArray(state.tcMovements)) state.tcMovements = [];
         }
         saveState();
         closeConfirm();
@@ -2478,10 +2946,22 @@ document.addEventListener("click", e => {
     }
     if (action === "entity-delete")  { deleteEntityFromDrawer(); return; }
     if (action === "decision-delete"){ deleteDecision(); return; }
+    if (action === "toggle-advanced"){
+      const wrap = t.closest(".advanced-toggle");
+      if (!wrap) return;
+      const sec = wrap.nextElementSibling;
+      if (!sec || !sec.classList.contains("advanced-section")) return;
+      const open = sec.classList.toggle("open");
+      t.textContent = open ? "Ocultar detalle avanzado ↑" : "Mostrar detalle avanzado ↓";
+      return;
+    }
     if (action === "close-confirm")  { closeConfirm(); return; }
     if (action === "export-json")    { exportJSON(); return; }
     if (action === "open-settings")  { openRatesForm(); return; }
     if (action === "goto-goals")     { goView("goals"); return; }
+    if (action === "goto-cashflow")  { goView("cashflow"); return; }
+    if (action === "new-tcMovement") { openEntityForm("tcMovement", null, t.dataset.parent); return; }
+    if (action === "edit-tcMovement"){ openEntityForm("tcMovement", id, t.dataset.parent); return; }
     if (action === "new-asset")      { openEntityForm("asset"); return; }
     if (action === "edit-asset")     { openEntityForm("asset", id); return; }
     if (action === "new-liability")  { openEntityForm("liability"); return; }
@@ -2578,7 +3058,7 @@ document.addEventListener("drop", e => {
    ============================================================ */
 function init() {
   const r = loadState();
-  if (r.migrated) toast(r.source === "v04" ? "Datos v0.4 migrados a v0.5" : "Datos v0.3 migrados a v0.5", "good");
+  if (r.migrated) toast("Datos " + r.source + " migrados a v0.6", "good");
   if (r.error) toast("Error al cargar: " + r.error + " (cargando demo)", "bad");
   renderApp();
 }

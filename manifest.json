@@ -1,7 +1,7 @@
 {
   "name": "Wealth OS",
   "short_name": "Wealth OS",
-  "description": "Sistema operativo patrimonial personal — capital, cashflow, decisiones y negocios familiares",
+  "description": "Sistema operativo patrimonial personal — capital, cashflow, decisiones, negocios, TC y metas",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,149 +1,86 @@
-# Wealth OS v0.5
+# Wealth OS v0.6
 
 Sistema operativo patrimonial personal. PWA single-file, single-tenant. Todo en `localStorage` con respaldo JSON.
 
-## ¿Qué cambió de v0.4 a v0.5?
-
-**Decision Lab profundo (Slice 3)** — la sección Decisiones pasa de placeholder a herramienta operativa real:
+## Cambios v0.5 → v0.6
 
 | Cambio | Detalle |
 |---|---|
-| **8 plantillas reales** | Auto, vivienda principal, depto inversión, emprender, aumentar inversión, prepagar deuda, tomar crédito, cambiar trabajo |
-| **Cada plantilla calcula** | Caja inicial, Δ flujo libre, liquidez post, runway post, DTI post, deuda agregada, patrimonio proyectado a 12/24/36m |
-| **Impacto en cada meta** | Por cada goal activo: "adelanta X meses" / "retrasa Y meses" / "ahora alcanzable" / "se vuelve inalcanzable" |
-| **Veredicto multi-criterio** | Viable / Esperar / No ahora, con razones específicas y condiciones bajo las cuales sí conviene |
-| **Decisiones persistentes** | Cada decisión se guarda con nombre + notas, podés volver a editarla, ver el veredicto actualizado, eliminarla |
-| **Live update** | Cambiás un input y todo se recalcula al instante: cuota, runway, veredicto, impacto en metas |
-| **Polish español** | Today → Hoy, Decision Lab → Decisiones, Venture Lab → Negocios, Backup → Respaldo, Rates → Tipos |
-| **Schema v4 → v5** | Migración automática que solo agrega `decisions: []`. Tu data v0.4 se preserva |
+| **TC con ciclo** | Liabilities tipo `credit_card` ahora aceptan `creditLimit` (cupo) y `cutoffDay` (día de corte). Nuevo array `tcMovements[]` para registrar cargos durante el ciclo. |
+| **Widget TC en Hoy** | Cards con barra de utilización + días al corte, solo si pasás el 30%. No llena el dashboard cuando no hace falta. |
+| **Sección TC en Cashflow** | Por cada TC: cupo, días al corte, barra de utilización, lista de cargos del ciclo en curso, botón "+ Cargo" para registrar rápido. |
+| **Progressive disclosure** | Forms de activos, deudas, metas y decisiones muestran 2-4 esenciales arriba. Resto en "Detalle avanzado" / "Supuestos del modelo" colapsado. |
+| **Smart defaults por clase** | ETF → 7% retorno / liquidez 2d / riesgo alto. Caja → 0% / inmediata / low. Propiedad → 3% / locked / medio. Etc. Si dejás retorno o liquidez vacíos en un activo, se usa el default. |
+| **Pie en cuotas (Modo A)** | Property templates con toggle "Pie en cuotas" + meses. Si on, el análisis se parte en Fase 1 (cuotas del pie) y Fase 2 (post-escrituración con hipoteca/arriendo). Cada fase muestra su impacto y veredicto por separado. |
+| **Schema bump v5 → v6** | Migración no destructiva. Si venís de v0.5, tu data se preserva. TC tiene `creditLimit: null` + `cutoffDay: null` por default (no rompen nada hasta que los configurás). |
 
-## Las 8 plantillas — qué calcula cada una
-
-**🚗 Comprar auto** — precio, pie, tasa, plazo, mantención, valor de reventa estimado. Devuelve cuota, intereses totales, TCO, depreciación 12m.
-
-**🏠 Comprar vivienda principal** — UF, pie %, tasa, plazo, gastos comunes, plusvalía. Devuelve dividendo mensual CLP, costos de compra, plusvalía esperada.
-
-**🏢 Comprar depto inversión** — todo lo anterior + arriendo, vacancia. Devuelve cap rate, cash-on-cash, NOI anual, cash flow neto mensual.
-
-**◆ Emprender** — capital, burn pre-breakeven, meses a BE, utilidad post, tu participación, probabilidad de éxito, múltiplo. Devuelve payback, valor estimado, valor esperado ponderado por probabilidad.
-
-**↗ Aumentar inversión mensual** — aporte extra, retorno anual, horizonte. Devuelve capital final, ganancia esperada, múltiplo. Nota: el aporte sale del flujo libre pero queda invertido.
-
-**↘ Prepagar deuda** — monto a prepagar, tasa, años restantes, cuota actual, % reducción. Devuelve intereses ahorrados, flujo libre liberado, recuperación de la inversión.
-
-**↪ Tomar crédito** — monto, tasa, plazo, propósito (inversión / consumo / refinanciar). Devuelve cuota, total a pagar, intereses, y nota crítica según propósito.
-
-**↻ Cambiar trabajo / renunciar** — sueldo nuevo, actual, meses de gap, costos extra durante gap. Devuelve diferencial mensual, pérdida en gap, acumulado neto a horizonte, breakeven en meses.
-
-## Veredicto — cómo se decide
-
-**Criterios críticos (No ahora):**
-- Cash post-decisión < 0
-- Flujo libre post < 0
-- DTI post > 40%
-
-**Criterios warning (Esperar / mejorar):**
-- Liquidez post bajo medio colchón (3m de burn)
-- Runway post < 3 meses
-- DTI post entre 30% y 40%
-- Flujo libre cae más de 70%
-
-**Si todo verde:** Viable.
-
-Cada warning/crítico viene con una **condición específica** para que se vuelva viable. Ejemplo: "Conseguir $4M más en cash rápido" o "Reducir gastos en $300K/mes".
-
-## Atajos de teclado
-
-| Atajo | Acción |
-|---|---|
-| `⌘K` / `Ctrl+K` | Paleta de comandos |
-| `1`–`6` | Navegar entre módulos (Hoy, Capital, Cashflow, Decisiones, Negocios, Metas) |
-| `Esc` | Cerrar drawer / paleta / confirmación |
-| `↑` `↓` `⏎` | Navegar resultados de la paleta |
-
-## Cómo probar la v0.5 (smoke test)
-
-Antes de subir a Pages, probá local:
+## Smoke test crítico
 
 ```bash
 python -m http.server 5173
 # abrir http://localhost:5173
 ```
 
-**1. Verificación de migración (si venís de v0.4):**
-- Al abrir, deberías ver toast verde: "Datos v0.4 migrados a v0.5"
-- Andá a Decisiones — deberías ver tu data v0.4 + el demo de "Mazda 3 sport 2025" guardado
+**Migración (si venís de v0.5):**
+1. Al abrir, esperás toast verde "Datos v05 migrados a v0.6".
+2. Andá a Capital → Deudas. Si tenías una TC, debería seguir ahí. Click para abrirla. Ahora deberías ver dos campos nuevos: "Cupo TC" y "Día de corte" (sólo visibles si el tipo es `credit_card`).
+3. Si no tenés TC todavía pero querés probar: + Deuda → Tipo: Tarjeta crédito → nombre = "TC Santander", saldo = 720000, cupo = 3000000, día corte = 5. Guardar.
 
-**2. Probar una decisión nueva:**
-- Decisiones → click "Comprar auto"
-- Drawer abre con inputs precargados
-- Cambiá `Precio` a 22000000 — el veredicto debería recalcularse al instante
-- Cambiá `Pie` a 8000000 — flujo libre post se actualiza
-- Bajá `Pie` a 1000000 — ahora debería marcar "No ahora" porque cash queda muy bajo
-- Mirá las condiciones: te dice cuánto más cash necesitarías
+**TC ciclo (la funcionalidad nueva):**
+4. Andá a Cashflow. Scroll hasta abajo: deberías ver una sección "Tarjetas de crédito — ciclo en curso" con tu TC y una barra (probablemente verde si no cargaste movimientos).
+5. Click "+ Cargo". Drawer abre con fecha de hoy, monto, concepto. Pone `monto 145000`, concepto "Test Jumbo". Guardar.
+6. Drawer cierra. La barra de la TC debería subir. La cifra "Consumido este ciclo" debería estar en 145000 (o lo que cargaste).
+7. Volvé a Hoy. Si pasás 30% del cupo, debería aparecer un panel "Tarjetas — ojo con esto" con la TC.
+8. Click en un cargo para editarlo. Probá eliminar uno.
 
-**3. Guardar una decisión:**
-- Cambiá el nombre a "Mazda 3 con pie alto"
-- Agregá notas: "Esperar bono de fin de año"
-- Click Guardar → drawer cierra, toast "Decisión guardada"
-- Volvé a Decisiones — debería aparecer en la tabla de "Decisiones guardadas" con su veredicto
+**Forms aligerados (lo que pediste):**
+9. Capital → Activos → click + Activo. Sólo ves nombre + clase + moneda + valor visibles. Botón "Mostrar detalle avanzado ↓" abajo. Click → se despliega lo demás (retorno, liquidez, riesgo, etc.) en una sección punteada.
+10. Sin tocar nada del avanzado, llená nombre="test ETF", clase=ETF, moneda=USD, valor=5000. Guardar. Andá a Capital — el ETF debería estar con liquidez "2d" y riesgo "Alto" automáticamente (defaults por clase).
+11. Lo mismo con Deudas y Metas: 3-4 campos esenciales arriba, resto bajo "avanzado".
 
-**4. Editar una guardada:**
-- Click en la fila guardada → drawer reabre con tus inputs
-- Cambiá algo, guardá. Verificá que se actualiza.
+**Decisiones simplificadas:**
+12. Decisiones → Comprar auto. El form ahora muestra sólo precio + pie. Botón "Mostrar supuestos del modelo ↓" abre el resto (tasa, plazo, mantención, reventa).
+13. Cambiá sólo el pie a 3M. El veredicto debería recalcularse en vivo sin tocar nada más.
 
-**5. Eliminar:**
-- Click en una guardada → botón rojo "Eliminar" abajo a la izquierda → confirmar.
+**Pie en cuotas:**
+14. Decisiones → Comprar depto inversión. En "Supuestos del modelo" → tilda "Pie en cuotas". Ajustá "Cuotas del pie" a 30.
+15. El análisis ahora muestra **dos paneles** lado a lado: "Fase 1 — Cuotas del pie" y "Fase 2 — Post escrituración". Cada uno tiene su veredicto.
+16. La Fase 1 probablemente esté en "Esperar" o "Viable" según tus inputs (sólo cuota del pie sin arriendo). La Fase 2 con arriendo + hipoteca puede ser distinta.
+17. Sacá el tilde de "Pie en cuotas". El análisis vuelve a un solo panel (modo tradicional v0.5).
 
-**6. Probar las otras 7 plantillas:**
-- Recorrelas. Cada una debería abrir, calcular sin NaN, mostrar veredicto.
-- Especialmente `Cambiar trabajo`: poné `Meses sin ingreso = 3` y mirá el warning sobre runway.
+**Respaldo + import:**
+18. Topbar → Respaldo. JSON debe incluir `tcMovements`, y deudas TC con `creditLimit`/`cutoffDay`, y decisiones con `pieEnCuotas`/`cuotasMeses`.
 
-**7. Impacto en metas:**
-- Asegurate de tener al menos una meta activa (Metas → + Meta si hace falta).
-- Volvé a Decisiones, abrí "Comprar auto" → la sección "Impacto en metas" debe mostrar +/- meses por cada meta.
+## Atajos
 
-**8. Respaldo:**
-- Topbar → "Respaldo" → descarga `wealth-os-YYYY-MM-DD.json`
-- Verificá que el JSON tiene un array `decisions` con tus decisiones guardadas
-
-**9. Paleta:**
-- ⌘K → escribí "decisión" → debería aparecer "Nueva decisión" + las acciones de crear entidad
-
-**10. Migración desde v0.3:**
-- Si limpiás `localStorage` y solo dejás la key `wealth_os_v03`, al cargar debería migrar a v0.5
-
-## Si algo falla
-
-Consola del navegador (F12) — cualquier `TypeError`, `undefined` o `NaN` es bug. Reportame qué tocaste y qué pasó.
-
-Reset total: ⌘K → "Borrar todo" o `localStorage.clear(); location.reload()`.
+`⌘K` / `Ctrl+K` paleta · `1-6` navegación · `Esc` cerrar drawer
 
 ## Estructura del repo
 
 ```
 Finanzas/
 ├── backups/v0.2/     ← se mantiene
-├── index.html        ← v0.5
-├── manifest.json     ← v05
-├── sw.js             ← cache v05
+├── index.html        ← v0.6
+├── manifest.json     ← v06
+├── sw.js             ← cache v06
 ├── icon.svg
 ├── README.md         ← este archivo
 ├── ARCHITECTURE.md   ← se mantiene
 └── schema.sql        ← se mantiene
 ```
 
-## Lo que NO está en v0.5 (postergado)
+## Lo que NO entra en v0.6 (postergado)
 
-- **Venture Lab con escenarios downside/base/upside** (queda para Slice 2 si lo retomamos).
-- **Comparación lado-a-lado de decisiones** (sería una v0.6: tomar 2-3 decisiones guardadas y ver cuál destruye/acelera más las metas).
-- **Gráfico de proyección de patrimonio** (hoy es solo numérico 12/24/36m; un mini-chart en el drawer ayudaría).
-- **Toggle de supuestos del modelo** (hoy es 6% sobre invertidos, 3% sobre RE — debería ser configurable por escenario).
+- **Modo B (motor multi-fase con proyección compuesta)** — la línea de patrimonio que muestra el "valle" durante cuotas y el alza después. Sale si Modo A se te queda corto.
+- **Comparación lado-a-lado de decisiones guardadas.**
+- **Gráficos de proyección** en el drawer.
+- **Negocios** con progressive disclosure (lo dejamos para más adelante porque no fue queja tuya).
+- **Reportes / cierre de mes.**
 
 ## Stack
 
-HTML + CSS + JS vanilla. Sin frameworks. ~137KB total. localStorage. Service Worker para offline. PWA instalable.
+HTML + CSS + JS vanilla. ~164KB. localStorage. Service worker para offline.
 
 ## Privacidad
 
-Todo vive en `localStorage` del navegador. Cero servidor, cero analytics, cero terceros. Hacé respaldo regular.
+Todo vive en `localStorage`. Hacé respaldo regular.

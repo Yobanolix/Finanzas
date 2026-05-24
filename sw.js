@@ -1,4 +1,4 @@
-const CACHE = 'wealth-os-v05';
+const CACHE = 'wealth-os-v06';
 const ASSETS = [
   './',
   './index.html',
