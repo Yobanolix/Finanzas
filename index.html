@@ -781,6 +781,19 @@ function calcCapital() {
   };
 }
 
+
+function fmtRunway(r) {
+  if (r == null) return "—";
+  if (r >= 99) return "99+";
+  return r.toFixed(1) + "m";
+}
+function runwayClass(r) {
+  if (r == null) return "";
+  if (r < 3) return "bad";
+  if (r < 6) return "warn";
+  return "good";
+}
+
 function calcCashflow() {
   const income = (state.cashflow?.income || []).reduce((s, i) => s + toCLP(i.amount || 0, i.currency), 0);
   const stableIncome = (state.cashflow?.income || []).filter(i => i.stable).reduce((s, i) => s + toCLP(i.amount || 0, i.currency), 0);
@@ -796,7 +809,10 @@ function calcCashflow() {
 
   // Runway: caja "líquida rápida" / burn
   const cap = calcCapital();
-  const runway = burn > 0 ? cap.fastLiquidValue / burn : 99;
+  let runway;
+  if (burn === 0 && cap.fastLiquidValue === 0) runway = null;       // indeterminado: sin datos
+  else if (burn === 0) runway = 9999;                                // sin gastos, infinito
+  else runway = cap.fastLiquidValue / burn;
 
   // DTI: cuota deuda / ingreso bruto
   const dti = income > 0 ? debtService / income : 0;
@@ -1395,7 +1411,7 @@ function renderSideCard() {
     <div class="side-label">Estado rápido</div>
     <div class="side-row"><span>Patrimonio neto</span><strong>${fmtShort(cap.netWorth)}</strong></div>
     <div class="side-row"><span>Flujo libre / mes</span><strong>${fmtShort(cf.freeFlow)}</strong></div>
-    <div class="side-row"><span>Runway</span><strong>${cf.runway > 99 ? "99+" : cf.runway.toFixed(1)}m</strong></div>
+    <div class="side-row"><span>Runway</span><strong>${fmtRunway(cf.runway)}</strong></div>
     <div class="side-label" style="margin-top:8px;">Metas</div>
     ${goalsHtml}
   `;
@@ -1417,7 +1433,7 @@ function renderToday(root) {
     <div class="grid cols-4">
       <div class="metric"><label>Patrimonio neto</label><strong class="num">${fmtShort(cap.netWorth)}</strong><small>${fmtShort(cap.grossAssets)} bruto − ${fmtShort(cap.totalDebt)} deuda</small></div>
       <div class="metric accent"><label>Flujo libre mensual</label><strong class="num">${fmtShort(cf.freeFlow)}</strong><small>Ingreso ${fmtShort(cf.income)} − gastos ${fmtShort(cf.expenses + cf.debtService)}</small></div>
-      <div class="metric ${cf.runway < 3 ? "bad" : cf.runway < 6 ? "warn" : "good"}"><label>Runway</label><strong class="num">${cf.runway > 99 ? "99+" : cf.runway.toFixed(1)}m</strong><small>Con liquidez rápida disponible</small></div>
+      <div class="metric ${runwayClass(cf.runway)}"><label>Runway</label><strong class="num">${fmtRunway(cf.runway)}</strong><small>Con liquidez rápida disponible</small></div>
       <div class="metric ${leverage > 0.5 ? "bad" : leverage > 0.3 ? "warn" : "good"}"><label>Leverage</label><strong class="num">${fmtPct(leverage)}</strong><small>Deuda / activos brutos</small></div>
     </div>
 
@@ -1654,7 +1670,7 @@ function renderCashflow(root) {
       <div class="grid cols-3">
         <div class="row"><span class="muted">Capacidad de inversión</span><strong class="num accent">${fmtShort(Math.max(0, cf.freeFlow))}</strong></div>
         <div class="row"><span class="muted">Burn rate (gastos + deuda)</span><strong class="num">${fmtShort(cf.burn)}</strong></div>
-        <div class="row"><span class="muted">Runway con liquidez rápida</span><strong class="num">${cf.runway > 99 ? "99+" : cf.runway.toFixed(1)}m</strong></div>
+        <div class="row"><span class="muted">Runway con liquidez rápida</span><strong class="num">${fmtRunway(cf.runway)}</strong></div>
         <div class="row"><span class="muted">Reserva (${state.settings.reserveMonths}m de burn)</span><strong class="num">${fmtShort(cf.burn * state.settings.reserveMonths)}</strong></div>
         <div class="row"><span class="muted">Falta para reserva</span><strong class="num">${fmtShort(Math.max(0, cf.burn * state.settings.reserveMonths - cap.fastLiquidValue))}</strong></div>
         <div class="row"><span class="muted">Pasivo / activos</span><strong class="num">${fmtPct(cap.grossAssets > 0 ? cap.totalDebt / cap.grossAssets : 0)}</strong></div>
@@ -1769,7 +1785,7 @@ function renderDecisions(root) {
         <div class="metric"><label>Cash rápido</label><strong class="num">${fmtShort(cap.fastLiquidValue)}</strong><small>Líquido en ≤ 2 días</small></div>
         <div class="metric accent"><label>Flujo libre</label><strong class="num">${fmtShort(cf.freeFlow)}</strong><small>${fmtPct(cf.savingsRate)} savings rate</small></div>
         <div class="metric ${cf.dti > 0.35 ? "bad" : cf.dti > 0.25 ? "warn" : "good"}"><label>DTI</label><strong class="num">${fmtPct(cf.dti)}</strong><small>Cuota deuda / ingresos</small></div>
-        <div class="metric ${cf.runway < 3 ? "bad" : cf.runway < 6 ? "warn" : "good"}"><label>Runway</label><strong class="num">${cf.runway > 99 ? "99+" : cf.runway.toFixed(1)}m</strong><small>Reserva: ${fmtShort(reserveTarget)} (${(reservePct*100).toFixed(0)}%)</small></div>
+        <div class="metric ${runwayClass(cf.runway)}"><label>Runway</label><strong class="num">${fmtRunway(cf.runway)}</strong><small>Reserva: ${fmtShort(reserveTarget)} (${(reservePct*100).toFixed(0)}%)</small></div>
       </div>
     </div>
 
@@ -1949,7 +1965,7 @@ function renderDecisionAnalysis() {
           const cashP = cap.fastLiquidValue + (ph.cashDelta || 0);
           const flowP = cf.freeFlow + (ph.monthlyFlowDelta || 0);
           const burnP = cf.burn + (ph.monthlyDebtAdded || 0);
-          const runwayP = burnP > 0 ? cashP / burnP : 99;
+          const runwayP = burnP === 0 && cashP === 0 ? null : (burnP === 0 ? 9999 : cashP / burnP);
           const debtP = cap.totalDebt + (ph.debtAdded || 0);
           const dtiP = cf.income > 0 ? (cf.debtService + (ph.monthlyDebtAdded || 0)) / cf.income : 0;
           const v = makeVerdict({ ...ph, cashDelta: ph.cashDelta, monthlyFlowDelta: ph.monthlyFlowDelta, monthlyDebtAdded: ph.monthlyDebtAdded, debtAdded: ph.debtAdded, assetAdded: ph.assetAdded }, state);
@@ -1960,7 +1976,7 @@ function renderDecisionAnalysis() {
             <div class="row"><span class="muted">Cash inicial</span><strong class="num ${(ph.cashDelta || 0) < 0 ? "bad" : ""}">${fmtShort(ph.cashDelta || 0)}</strong></div>
             <div class="row"><span class="muted">Δ flujo / mes</span><strong class="num ${(ph.monthlyFlowDelta || 0) < 0 ? "bad" : "good"}">${(ph.monthlyFlowDelta || 0) >= 0 ? "+" : ""}${fmtShort(ph.monthlyFlowDelta || 0)}</strong></div>
             <div class="row"><span class="muted">Flujo libre post</span><strong class="num ${flowP < 0 ? "bad" : ""}">${fmtShort(flowP)}</strong></div>
-            <div class="row"><span class="muted">Runway post</span><strong class="num ${runwayP < 3 ? "bad" : ""}">${runwayP > 99 ? "99+" : runwayP.toFixed(1)}m</strong></div>
+            <div class="row"><span class="muted">Runway post</span><strong class="num ${runwayClass(runwayP)}">${fmtRunway(runwayP)}</strong></div>
             <div class="row"><span class="muted">Deuda agregada</span><strong class="num">${fmtShort(ph.debtAdded || 0)}</strong></div>
             <div class="row"><span class="muted">DTI</span><strong class="num ${dtiP > 0.35 ? "bad" : ""}">${fmtPct(dtiP)}</strong></div>
           </div>`;
@@ -1975,7 +1991,7 @@ function renderDecisionAnalysis() {
   const debtServicePost = cf.debtService + (deltas.monthlyDebtAdded || 0);
   const dtiPost = cf.income > 0 ? debtServicePost / cf.income : 0;
   const burnPost = cf.burn + (deltas.monthlyDebtAdded || 0);
-  const runwayPost = burnPost > 0 ? cashPost / burnPost : 99;
+  const runwayPost = burnPost === 0 && cashPost === 0 ? null : (burnPost === 0 ? 9999 : cashPost / burnPost);
   const nw12 = projectNetWorth(12, deltas);
   const nw24 = projectNetWorth(24, deltas);
   const nw36 = projectNetWorth(36, deltas);
@@ -2024,7 +2040,7 @@ function renderDecisionAnalysis() {
       <div class="row"><span class="muted">Flujo libre post</span><strong class="num ${flowPost < 0 ? "bad" : ""}">${fmtShort(flowPost)} <span class="faint">(era ${fmtShort(cf.freeFlow)})</span></strong></div>
       <div class="row"><span class="muted">Deuda agregada</span><strong class="num ${(deltas.debtAdded || 0) > 0 ? "warn" : ""}">${fmtShort(deltas.debtAdded || 0)}</strong></div>
       <div class="row"><span class="muted">DTI post</span><strong class="num ${dtiPost > 0.35 ? "bad" : dtiPost > 0.25 ? "warn" : ""}">${fmtPct(dtiPost)} <span class="faint">(era ${fmtPct(cf.dti)})</span></strong></div>
-      <div class="row"><span class="muted">Runway post</span><strong class="num ${runwayPost < 3 ? "bad" : runwayPost < 6 ? "warn" : ""}">${runwayPost > 99 ? "99+" : runwayPost.toFixed(1)}m <span class="faint">(era ${cf.runway > 99 ? "99+" : cf.runway.toFixed(1)}m)</span></strong></div>
+      <div class="row"><span class="muted">Runway post</span><strong class="num ${runwayClass(runwayPost)}">${fmtRunway(runwayPost)} <span class="faint">(era ${fmtRunway(cf.runway)})</span></strong></div>
     </div>
 
     <div class="panel tight">
@@ -2763,7 +2779,7 @@ function makeVerdict(deltas, st) {
   const debtServicePost = cf.debtService + (d.monthlyDebtAdded || 0);
   const dtiPost = cf.income > 0 ? debtServicePost / cf.income : 0;
   const burnPost = cf.burn + (d.monthlyDebtAdded || 0);
-  const runwayPost = burnPost > 0 ? cashPost / burnPost : 99;
+  const runwayPost = burnPost === 0 && cashPost === 0 ? null : (burnPost === 0 ? 9999 : cashPost / burnPost);
   const reserveTarget = burnPost * (st.settings.reserveMonths || 6);
 
   const issues = [];
@@ -2786,7 +2802,7 @@ function makeVerdict(deltas, st) {
     issues.push({ level: "warning", text: "Liquidez post quedaría bajo medio colchón (3m burn)" });
     conditions.push("Tener " + fmtShort(reserveTarget * 0.5 - cashPost) + " más en cash antes");
   }
-  if (runwayPost < 3 && runwayPost >= 0) {
+  if (runwayPost != null && runwayPost < 3 && runwayPost >= 0) {
     issues.push({ level: "warning", text: "Runway bajaría a " + runwayPost.toFixed(1) + " meses" });
   }
   if (dtiPost > 0.30 && dtiPost <= 0.40) {
