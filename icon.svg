@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="32" fill="#08090b"/>
-  <rect x="18" y="18" width="156" height="156" rx="24" fill="#0d0f12" stroke="#2a2f37"/>
-  <path d="M45 57h20l17 72 19-72h18l19 72 17-72h20l-27 78h-22l-16-58-16 58H72L45 57Z" fill="#5e90ff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#08090b"/>
+  <text x="32" y="42" text-anchor="middle" font-family="Inter, sans-serif" font-weight="700" font-size="28" fill="#5e90ff">W</text>
 </svg>

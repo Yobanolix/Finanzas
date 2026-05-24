@@ -1,17 +1,15 @@
 {
   "name": "Wealth OS",
   "short_name": "Wealth OS",
-  "description": "Personal capital, decisions and venture lab.",
+  "description": "Sistema operativo patrimonial personal — capital, cashflow, decisiones y negocios familiares",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#08090b",
   "theme_color": "#08090b",
+  "orientation": "any",
+  "categories": ["finance", "productivity"],
   "icons": [
-    {
-      "src": "icon.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
